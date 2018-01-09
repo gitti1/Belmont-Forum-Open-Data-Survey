@@ -1,0 +1,2261 @@
+Belmont Forum - Open Data Survey
+======================
+
+
+Author: Birgit Schmidt, University of Goettingen
+
+Contributors: Belmont Forum Open Data Working Group
+
+Version: 26 November 2015
+
+This file contains summary statistics based on data which was collected in the context of the Belmont Forum's Open Data survey. The data is publicly available. For the publication of the survey data free text answers have either be lightly edited (question 4, other), or are provided in separate files (questions 8, 15, 16, 17). For more information please also consult the ABOUT file as available with the published data.   
+
+Cite data as: Schmidt, Birgit et al. (2015). Belmont Forum Open Data Survey 2014. Zenodo. 10.5281/zenodo.16384
+
+```{r loadlibraries, echo=FALSE, message=FALSE, warning = FALSE}
+# setting for printing of numeric values
+options(digits=2)
+
+# install packages (not all of them might have been used below)
+options(repos = c(CRAN="http://cran.r-project.org"))
+#packages <- c("ggplot2", "reshape", "ggplot2", "likert", "xtable", "graphics", "scales", "pander", "RColorBrewer", "colorspace", "stats", "MASS", "agricolae", "vcd")
+# if (length(setdiff(packages, rownames(installed.packages()))) > 0) {install.packages(setdiff(packages, rownames(installed.packages())))  
+#} 
+
+# load libraries
+require(plyr)
+#require(dplyr) # use either plyr or dplyr
+require(reshape2)
+require(ggplot2)
+require(likert) # compare http://jason.bryer.org/likert/
+#require(plotrix)
+require(xtable)
+require(pander)
+require(graphics)
+require(scales)
+#require(squash) # for color palettes
+require(RColorBrewer)
+require(colorspace) # for rainbow_hcl color palette
+require(stats)
+require(MASS)
+require(agricolae)
+require(vcd)
+```
+
+```{r setup, include=FALSE}
+# Generate PDFs not PNGs for the figures
+# de-enable after generating the figures as HTML does not work well with embedded PDF
+#knitr::opts_chunk$set(dev = 'pdf')
+```
+
+```{r loaddata, cache=T, echo=F, message=FALSE} 
+# all: Download Zenodo version with freetext removed - if not already stored locally
+#setInternet2(use = TRUE)
+temporaryFile <- tempfile()
+download.file("https://zenodo.org/record/16384/files/Belmont_Forum_Open_Data_Survey_Results_minus_IP_minus_freetext_15112014.csv", destfile=temporaryFile)
+messy <- read.csv(temporaryFile, stringsAsFactors=TRUE, header=TRUE, sep=";", na.strings="", skip=1)
+
+temp <- tempfile()
+download.file("https://zenodo.org/record/16384/files/detailsguidelines_q7.csv", destfile=temp)
+detailsguidelines_q7 <- read.csv(temp, stringsAsFactors=TRUE, header=TRUE, sep=";", na.strings="")
+
+# while at home
+#messy <- read.csv("/Users/bschmidt/Dropbox/Belmont Forum/data/All Qs Final Survey Results Minus IP_15112014.csv", stringsAsFactors=TRUE, header=TRUE, sep=";", na.strings="", skip=1)
+
+```
+
+```{r changenames, echo=FALSE, cache=F}
+# only load plyr to make this renaming work (if dplyr is also loaded errors may occur based on the dots in the names)
+my_changes1 <- c(X="RespondendID", X.1="CollectorID", X.2="Start.date", X.3="End.date", Response="Country", Response.1="Age", Response.2="Employment.role", Other..please.specify.="Other.employment.role", Other..please.specify..1="Other.Data.Role", Earth.Sciences.and.environmental.sciences = "Earth.sciences.and.environmental.sciences", "Other..please.specify..2"="Other.discipline", Well.defined.license.terms..i.e..the.license.is.defined.and.it.is.easy.to.interpret.the.terms.="Well.defined.license.terms", Well.defined.quality.information..i.e..data.quality.is.defined.and.this.information.is.useful.for.interpreting.the.data. = "Well.defined.quality.information", Well.defined.metadata..i.e..metadata.is.complete..structured.according.to.a.standard.and.is.useful.for.interpreting.the.data.="Well.defined.metadata", The.potential.value.of.the.data.for.scientific.research.purposes.and.scholarly.publishing="Potential.value.for.research", Low.cost..other.than.cost.of.publication.or.delivery.="Low.cost", Timely..recent.and.actual.data="Timely.data", Ability.to.protect.or.restrict.access.to.some.data..e.g..confidential.or.sensitive.data.="Ability.to.restrict.access", Other..please.specify..3="Other.properties", Public.Domain..Creative.Commons.CC0..Public.Domain.Dedication.License.PDDL.="Public.Domain", Attribution..Creative.Commons.CC.BY..Open.Data.Commons.ODC.BY.="Attribution", Attribution.Share.Alike..CC.BY.SA..Open.Database.License.ODbL.="Attribution.Share.Alike", Non.Commercial..CC.BY.NC.="Non.Commercial", No.Derivatives..CC.BY.ND.="No.Derivatives", Other..please.specify..4="Other.License", Response.3="Awareness.of.guidelines", Details.="Details.guidelines")
+my_changes2 <- c(Response.4="Concerns.on.licenses", Details..1="Details.licenses", The.data.are.citable.via.persistent.identifiers..Digital.Object.Identifiers..DOIs...Handles..other.="Citable.via.persistent.identifiers", Links.to.publications.are.provided="Links.to.publications", Information.about.tools..to.process..visualize..etc...is.provided="Information.about.tools", Code.can.be.published.or.accessed.along.with.the.data="Code.published.or.accessible", Interoperability.with.other.infrastructures.or.systems.is.supported="Interoperability", Publishers.endorse.the.repository="Publisher.endorsed", Repositories.are.independently.certified.as....trustworthy...="Repository.certified", Usage.restrictions.conditions.and.or.licensing.information.is.communicated="Usage.conditions.available", Authorship.and.attribution.information.is.highlighted="Attribution.highlighted", Visual.interfaces.to.explore.the.data.sets="Visual.interfaces", Other..please.specify..5="Other.services", Advancing.research.="Advancing.research", Educational.and.public.outreach.activities.="Educational.and.public.outreach.activities", Supporting.applications.of.science.to.societal.problems.="Supporting.applications.to.societal.problems", Promoting.capacity.building.and.technology.transfer.="Promoting.capacity.building.and.technology.transfer", Other..please.specify..6="Comments.open.data", Detail.="Detail.open.data", Other..please.specify..7="Other.motivators", Legal.constraints..data.privacy..national.security..protection.of.confidentiality..intellectual.property.rights.etc..="Legal.constraints", Misinterpretation.or.misuse.of.data="Misinterpretation.or.misuse", Loss.of.credit.or.recognition.of.original.work="Loss.of.credit.or.recognition", Difficulty.of.clarifying.data.rights.for.work.involving.multiple.inputs.or.authors="Difficulty.of.clarifying.rights.multiple.inputs.or.authors", Concerns.about.legal.liability.for.data.or.release.of.data="Concerns.about.legal.liability.or.release", Concerns.about.impact.of.data.release..e.g...on.endangered.species..cultural.artifacts..or.vulnerable.populations..unwanted.disclosure.etc..="Concerns.about.impact.of.data.release", Other..please.specify..8="Other.barriers", References.to.data.as.provided.in.journal.articles="References.in.journal.articles", Searching.in.specific.data.archives.repositories.systems="Searching.in.specific.data.repositories", Other..please.specify..9="Other.discovery", X1="Data.archive.discovery.1", X2="Data.archive.discovery.2", X3="Data.archive.discovery.3", X1.1="Data.archive.publishing.1", X2.1="Data.archive.publishing.2", X3.1="Data.archive.publishing.3", X1.2="Leading.example.1", X2.2="Leading.example.2", X3.2="Leading.example.3", Other..please.specify..10="Other.burden.for.access.or.reuse")
+messy1 <- rename(messy, my_changes1)
+belmontall <- rename(messy1, my_changes2)
+```
+
+```{r intro, echo=FALSE, cache=F}
+# leave out the lines where no employment role is provided
+#belmont <- belmontall[is.na(belmontall$Employment.role) | is.na(belmontall$Other.employment.role), ]
+badnE <- (is.na(belmontall$Employment.role) & is.na(belmontall$Other.employment.role)) # no employment role available in either field
+belmont <- belmontall[!badnE, ]
+
+# check dimensions
+#dim(belmont)
+#names(belmont)[1:20]
+
+# countries as reference for introduction
+tbCountry <- table(belmont$Country)
+```
+
+## Introduction
+The Belmont Forum [1], a group of high-level representatives from major funding agencies across the globe, coordinates funding for collaborative research actions to address the challenges and opportunities of global environmental change. In particular, to collaboratively develop capable e-infrastructures a multi-phased E-Infrastructure and Data Management Collaborative Research Action has been initiated. This will provide a strategy and implementation plan to further shape strategic science policies, outlining what can be done better, in a multilateral way, to support global change research.
+
+A survey developed by the Belmont Forum working group on open data invited researchers of various science communities, interested laypersons, government employees, and others who are providing and/or using open data in the scope of global environmental change, or are planning/interested in doing so in the future, to share their views and experiences on data publishing, access and (re)use. The main aim was to learn more about:
+
+- Key open data activities in various communities dealing with global environmental change to identify leading examples of best practice from a user perspective;
+- Reasons where users' desire to share can be enhanced by new/other developments;
+- Barriers to "open data sharing" from a user perspective (as a data provider or data user).
+
+From September to November 2014, `r dim(belmontall)[1]` responses to the Belmont Forum Open Data Survey have been collected through a web survey (SurveyMonkey). Dissemination channels included about 20 disciplinary and professional mailing lists targeting researchers, data scientists, data managers and technologists from the environmental sciences, earth sciences, marine and polar sciences, biodiversity, as well as social and economic sciences. On 25 September 2014 the survey was distributed to all authors of the open access publisher Copernicus Publications (c 29,000 recipients) which generated a peak in responses of about a thousand answers, dropping down within a week after the mailing. A potential bias of the respondents should be taken into account as these authors are likely better informed about the topic of the survey than the general author population. 
+
+Some visitors of the survey left at early stages of the questionnaire, therefore we only use those `r dim(belmont)[1]` responses which provided information about their employment role. 
+
+## Responses by country
+Q1: Which country are you from?
+
+```{r, cache=F, echo=FALSE}
+tbCountry <- table(belmont$Country)
+Countrycount <- sort(tbCountry, decreasing=TRUE)
+# tail(Countrycount) # reveals 4 countries with no respondent - overall 84-4=80 countries with responses
+countries20 <- Countrycount[Countrycount>20]
+n <- length(Countrycount[Countrycount>20])
+par(las=2)
+# Use of color palette terrain.colors(n) or some fancy palette from RColorBrewer
+cols <- terrain.colors(n)
+#cols <- colorRampPalette(brewer.pal(11,"RdYlGn"))(n)
+#cols <- terrain_hcl(n)
+#cols <- rainbow_hcl(12, start = 0, end = 340)
+mp <- barplot(countries20, axisnames=F, col=cols, beside=T)
+legend("topright", legend=names(countries20), cex=0.75, fill=cols)
+title("Which country are you from?")
+#sum(Countrycount[16:84]) # number of countries not in the plot ("other")
+```
+
+
+Overall, data was collected from `r dim(tbCountry)` countries. The plot displays the `r n` countries with the more than 20 answers, the "other countries" category contains `r sum(Countrycount) - sum(countries20)` responses and is not shown.
+
+## Age groups
+Q2: How old are you?
+
+```{r, cache=F, echo=FALSE}
+belmontAge <- belmont$Age
+# apply factor function not just rename the levels!!
+#levels(belmontAge) <- c("<=20", "21-25", "26-30", "31-35", "36-40", "41-45", "46-50", "51-55", "56-60", "61-65", "66-70", "71-75", "76-80", "81-85", ">90")
+belmontAge <- factor(belmontAge, levels = c("<=20", "21-25", "26-30", "31-35", "36-40", "41-45", "46-50", "51-55", "56-60", "61-65", "66-70", "71-75", "76-80", "81-85", ">90"))
+tbAgegroups <- table(belmontAge)
+#Agegroups <- sort(tbAgegroups, decreasing=TRUE)
+par(las=2)
+mp <- barplot(tbAgegroups, axisnames=F, col=terrain.colors(15), beside=T)
+legend("topright", legend=names(tbAgegroups)[1:15], cex=0.75, fill=terrain.colors(15)) 
+title("How old are you?")
+
+# Computations on age
+tA <- tbAgegroups
+n <- sum(tA) # number of individuals which provided an age
+avgAge <- (20* tA[1] + 23 * tA[2] + 28 * tA[3] + 33 * tA[4] + 38 * tA[5] + 43 * tA[6] + 48 * tA[7] + 53 * tA[8] + 58 * tA[9] + 63 * tA[10] + 68 * tA[11] + 73 * tA[12] + 78 * tA[13] + 83 * tA[14] + 90 * tA[15]) /n
+
+# introduce the midpoint of the age bins as a new variable "avAge"
+m <- nrow(belmont)
+for(i in 1:m){
+    if (is.na(belmont$Age[i])){
+        belmont$avAge[i] <- NA 
+    }else if(belmont$Age[i] == "<=20"){
+        belmont$avAge[i] <- 20
+    }else if(belmont$Age[i] == ">90"){
+        belmont$avAge[i] <- 90
+    }else {
+        xi <- strsplit(as.character(belmont$Age[i]), "-")
+        belmont$avAge[i] <- (as.numeric(unlist(xi)[1]) + 2)
+    }
+}
+
+# the average age is the median of this new variable
+avgAge2 <- median(belmont$avAge, na.rm=T)
+
+# Age proportions
+noAge <- is.na(belmont$Age)
+Age <- belmont$Age[!noAge]
+n <- length(Age) # number of responses with age info
+Age_prp <- table(Age)/n*100 # percentage table for Age grps
+tabAge <- round(Age_prp, 2)
+#xtable(tabAge)
+``` 
+
+The average age of respondents is about `r round(avgAge)` years (based on the average age in each group, and of 20 and 90 years for the extremes). The median is represented by the age group of 41 to 45 years. Information about age is missing for `r sum(is.na(belmont$Age))` individuals.  
+
+## Employment role
+Q3: What is your employment role / How are you involved with data and/or climate science?
+
+```{r, cache=F, echo=FALSE}
+tbEmpl <- table(belmont$Employment.role)
+employment <- sort(tbEmpl, decreasing=TRUE)
+par(las=2)
+mp <- barplot(employment, axisnames=F, col=terrain.colors(5), beside=T)
+legend("topright", legend=names(employment), cex=0.75, fill=terrain.colors(5)) 
+title("What is your employment role?")
+
+
+bad <- is.na(belmont$Other.employment.role)
+otherempl <- belmont$Other.employment.role[!bad]
+#write.csv(otherempl, "/Users/bschmid1/Dropbox/Belmont Forum/data/OtherEmploymentRole.csv", row.names = FALSE)
+#length(otherempl)
+emplprop <- prop.table(employment)
+
+# Number of respondents with other employment (without the ones who specified $Employment.role)
+bEmpl <- is.na(belmont$Employment.role)
+otherEmpl <- belmont$Other.employment.role[bEmpl]
+nOther <- length(otherEmpl)
+
+# Add "Other" to employment table, works fine via Console, but messed up by KNITR
+employmentAm <- as.data.frame(employment)
+employmentAm$Other <- length(otherEmpl)
+#employmentAm <- sort(employmentAm, decreasing=TRUE)
+nEmpl <- nOther + table(is.na(belmont$Employment.role))[1]
+
+# Percentage table employment role
+#round(employmentAm/nEmpl * 100, 1)
+#xtable, transposed
+#xtable(t(round(employmentAm/nEmpl * 100, 1)))
+
+# Amended plot - throws error: "error in barplot, 'height' must be a vector or a matrix" ????
+#par(las=2)
+#mp <- barplot(employmentAm, axisnames=F, col=terrain.colors(5), beside=T)
+#legend("topright", legend=names(employment), cex=0.75, fill=terrain.colors(5)) 
+#title("What is your employment role?")
+``` 
+
+Of all respondents who provided information about their employment role (N = `r sum(tbEmpl)`), `r percent(emplprop[1])` percent work in academic positions, `r percent(emplprop[2])` in government, `r percent(emplprop[3])` in non-profit institutions, `r percent(emplprop[4])` in business and `r percent(emplprop[5])` in media institutions. In addition, `r length(otherempl)` respondents provided information about their positions, e.g. in other types of research institutions, international organizations, or are independent researcher/consultant or retired researchers. Some belong to the first five categories but may have a double role. Of these `r nOther` respondents did not categorize themselves in one of the offered employment roles. 
+
+## Type of data professional
+Q4: Which of the following are you?
+
+```{r, cache=F, echo=FALSE}
+dataprof <- belmont[ , 9:12]
+countdataprof <- apply(dataprof, 2, function(x) sum(!is.na(x)))
+# countdataprof # outcome for all data user categories (multiple-choice!)
+cdataprof <- sort(countdataprof, decreasing=TRUE)
+names(cdataprof) <- gsub("\\.", " ", names(cdataprof))
+par(las=2)
+mp <- barplot(cdataprof, axisnames=F, col=terrain.colors(4), beside=T)
+legend("topright", legend=names(cdataprof), cex=0.75, fill=terrain.colors(4)) 
+title("Data professional role (multiple answered allowed)")
+
+# look at other field
+bad2 <- is.na(belmont$Other.Data.Role)
+otherdatarole <- belmont$Other.Data.Role[!bad2]
+#write.csv(otherdatarole, "/Users/bschmid1/Dropbox/Belmont Forum/data/OtherDataRole.csv", row.names = FALSE)
+#length(otherdatarole)
+
+badnodatarole <- (is.na(belmont$Data.User) & is.na(belmont$Data.Provider) & is.na(belmont$Data.Manager) & is.na(belmont$Other.Data.Role)) # no data role available in either field
+dataprof2 <- dataprof[!badnodatarole, ]
+n2 <- nrow(dataprof2)
+
+countdataprof2 <- apply(dataprof2, 2, function(x) sum(!is.na(x)))
+countdataprof2
+round(countdataprof2/n2*100, 2)
+#xtable(as.table(round(countdataprof2/n2*100, 2)))
+``` 
+
+Of all respondents (n = `r n2`), `r countdataprof[1]/n2 * 100`% (`r countdataprof[1]` responses) see themselves as data users, `r countdataprof[2]/n2 * 100`% (`r countdataprof[2]` responses) as data providers and `r countdataprof[3]/n2 * 100`% (`r countdataprof[3]` responses) as data managers  (multiple answers were allowed). Another `r countdataprof[4]/n2 * 100`% (`r countdataprof[4]` responses) of all respondents see themselves in other or multiple data roles, and/or were unsure on how to classify themselves, e.g. as researchers, (data) librarian, software developer, administrator etc. 
+
+
+## Disciplines
+Q5: Which discipline community do you belong to, or primarily work with, in respect to data?
+
+```{r, cache=F, echo=FALSE}
+belmontdisciplines <- belmont[ , 13:24]
+countdisc <- apply(belmontdisciplines, 2, function(x) sum(!is.na(x)))
+cdisc <- sort(countdisc, decreasing=TRUE)
+#discprop <- percent(prop.table(cdisc)) does not take multiple answers into account!!
+names(cdisc) <- gsub("\\.", " ", names(cdisc))
+par(las=2)
+mp <- barplot(cdisc, axisnames=F, col=terrain.colors(12), beside=T)
+legend("topright", legend=names(cdisc), cex=0.75, fill=terrain.colors(12)) 
+title("Disciplines (multiple answers allowed)")
+
+# create disciplines table
+badDisc <- is.na(belmont[, 13]) & is.na(belmont[, 14]) & is.na(belmont[, 15]) & is.na(belmont[, 16]) & is.na(belmont[, 17]) & is.na(belmont[, 18]) & is.na(belmont[, 19]) & is.na(belmont[, 20]) & is.na(belmont[, 21]) & is.na(belmont[, 22]) & is.na(belmont[, 23]) 
+nDisc <- table(badDisc)[1] # number of respondents that provided info (where is.na==FALSE)
+tabDisc <- data.frame(cdisc)
+#discprop <- round(cdisc/nDisc * 100, 1)
+tabDisc$Percentage <- round(cdisc/nDisc * 100, 1)
+rename(tabDisc, c("cdisc" = "Frequency"))
+#xtable(data.frame(tabDisc))
+``` 
+
+As expected, the majority of respondents belong to earth and environmental sciences (`r tabDisc$Percentage[1]`) and climate and atmospheric sciences (`r tabDisc$Percentage[2]`). In addition, there are at least 80 answers from the biological sciences (`r tabDisc$Percentage[3]`), physical sciences (`r tabDisc$Percentage[4]`), engineering (`r tabDisc$Percentage[5]`) and computer science (`r tabDisc$Percentage[6]`). 
+
+## Perceived properties of open data
+Q6: Which attributes do you think are most important to open data?
+
+```{r, cache=F, echo=FALSE}
+belmontOD <- belmont[, 25:35]
+belmontOD <- lapply(belmontOD, factor, levels=c("Not Important", "Intermediate Important", "Very Important"))
+belmontOD <- as.data.frame(belmontOD)
+names(belmontOD) <- gsub("\\.", " ", names(belmontOD))
+belmontODlik <- likert(belmontOD)
+plot(belmontODlik, centered = FALSE, wrap = 30) + ggtitle("Which attributes do you think are most important to open data?") +  theme(plot.title = element_text(size = 10,colour="black")) + ylab("Percentage") + theme(axis.title.y = element_text(size = 10, colour = 'black')) 
+
+# count responses to each attribute of open data
+#apply(belmont[ , 25:35], 2, function(x) sum(table(x)))
+```
+
+Instead of providing a definition of "open data" the survey assessed the perceptions associated with the term. The answers to the question "Which attributes do you think are most important to open data?" highlight the importance of information which enables users to assess the quality of the data, to select based on metadata and to easily access and reuse the data. The ability to restrict access is lowest in the ranking of attributes, which fits with the idea of openness. However, nearly 2/5 of all respondents still consider the option to restrict access as a very important attribute. This may be due to the perception that keeping control of the release date of data into the open is essential. 
+
+## Access and licensing conditions
+Q7: What access or licensing approaches do you consider most useful for open data?
+
+```{r, cache=F, echo=F}
+belmontlicenses <- belmont[, 37:42]
+belmontlicenses <- lapply(belmontlicenses, factor, levels=c("Not Useful", "Somewhat Useful", "Very Useful"))
+belmontlicenses <- as.data.frame(belmontlicenses)
+names(belmontlicenses) <- gsub("\\.", " ", names(belmontlicenses))
+belmontlicenseslik <- likert(belmontlicenses)
+plot(belmontlicenseslik, centered = FALSE, wrap = 30) + ggtitle("What access or licensing approaches do you consider most useful for open data?") +  theme(plot.title = element_text(size = 10,colour="black")) + ylab("Percentage") + theme(axis.title.y = element_text(size = 8, colour = 'black')) 
+
+# look at other field
+badod1 <- is.na(belmont$Other.properties)
+otheropendata1 <- belmont$Comments.open.data[!badod1]
+#write.csv(otheropendata1, "/Users/bschmid1/Dropbox/Belmont Forum/data/Otheropendata1.csv", row.names = FALSE)
+# no freetext answers (mistake in setting up the answer field as Likert)
+
+```
+
+"Public Domain" and "Attribution" are considered very useful by the majority of respondents, which is in line with the recommendations by advocacy organizations, policy makers and research funders. Not surprisingly, "No Derivatives" is seen as least useful of all license options. Although references to definitions of these terms have been provided some respondents still have difficulties in understanding license terms (compare question 9). 
+
+## Guidelines for open data
+Q8: Are you aware of any guidelines for publishing open data?   If your answer is 'Yes' please provide a title and/or link.
+
+```{r, cache=TRUE, echo=F, message=FALSE}
+# Concerns about licenses
+concernslic <- belmont[ , 44]
+c <- table(concernslic)
+barplot(prop.table(c), main="Are you aware of any guidelines for publishing open data?", col=c("salmon", "lightgreen"))
+
+# Comments on licenses
+withcomments <- detailsguidelines_q7
+## CC license mentioned
+### ToDo: grep does not find the 12 mentions of CC
+tomatchCC <- c("[Cc]reative(.)?[Cc]ommons", "CC")
+matchesCC <- grep(paste(tomatchCC,collapse="|"), withcomments, value=TRUE)
+
+## Awareness of guidelines among data professionals
+round(prop.table(table(belmont$Data.User, belmont$Awareness.of.guidelines)),2)
+round(prop.table(table(belmont$Data.Provider, belmont$Awareness.of.guidelines)),2)
+round(prop.table(table(belmont$Data.Manager, belmont$Awareness.of.guidelines)),2)
+```
+
+```{r, cache=F, echo=F, message=FALSE}
+# Details on guidelines
+badguidelines <- is.na(belmont$Details.guidelines)
+detailsguidelines <- belmont$Details.guidelines[!badguidelines]
+#write.csv(detailsguidelines, "/Users/bschmid1/Dropbox/Belmont Forum/data/detailsguidelines.csv", row.names = FALSE)
+```
+
+Of those who provided an answer, only `r percent(c[c="Yes"]/sum(c))` (`r c[c="Yes"]` respondents) are aware of any guidelines for publishing data, all other `r c[c="No"]` respondents do not seem to be aware of any guidelines. 
+
+Overall, `r nrow(withcomments)` respondents provided a wide range of examples:
+
+- licenses: Creative Commons (mentioned `r length(matchesCC)` times), Open Data Commons
+- data policies (by funders, scholarly societies, etc.): European Commission, OECD, RCUK, Sunlight Foundation, AGU, etc.
+- repository/archive and e-infrastructures: PANGAEA, Dryad, DataONE, GBIF, CGIAR, European Vegetation Archive, etc. 
+- declarations, handbook, general information: Bouchout Declaration, Open Data Handbook, 5 star open data, etc. 
+- government data: US, France, Australia, Austria, etc. 
+- data publishing and data journals: Force11 Joint declaration on Data Citation Principles, Earth System Science Data, Pensoft, Wiley, Springer, Nature Publishing Group, EGU journals, etc. 
+- technical guides: W3C, DOI standard (ISO), etc. 
+- literature: e.g. Goodman et al (2014): Ten simple rules for the care and feeding of scientific data, PLoS Computational Biology, DOI: 10.1371/journal.pcbi.1003542
+
+## Concerns about licensing
+Q9: Do you have any concerns or comments about the licensing of data?
+
+```{r, cache=F, echo=F}
+concernslic <- belmont[ , 46]
+d <- table(concernslic)
+barplot(prop.table(d), main="Do you have any concerns about the licensing of the data?", col=c("lightgreen", "salmon"))
+
+# Comments on concerns about licensing
+#commentslicconc <- read.csv("https://zenodo.org/record/16384/files/commentsliccon_q9.csv")
+commentslicconc <- read.csv("/Users/bschmidt/Dropbox/Belmont Forum/data/commentsliccon_q9.csv")
+withcomments2 <- nrow(commentslicconc)
+```
+
+Concerns about licensing data do not seem to be particularly strong, only `r percent(d[d="Yes"]/sum(d))` percent of respondents have expressed concerns. `r length(withcomments2)` respondents have provided explicit comments which range from considering licenses a burden, difficulties in understanding licenses, lack of standardization, concerns about too restrictive licenses (in particular Non Commercial, Share Alike), concerns about misuse of data, attribution stacking (in relation to CC-BY) and issues of confidentiality (i.e. providing levels of open access).
+
+## Expectations about services and functionalities from infrastructures
+Q10: What services/functionalities do you expect from infrastructures or systems such as networks, repositories, and visualization tools for open data when publishing or accessing data?
+
+```{r, cache=F, echo=F}
+require(likert)
+belmontinfra <- belmont[, 48:57]
+belmontinfra <- lapply(belmontinfra, factor, levels = c("Not Important", "Intermediate Important", "Most Important"))
+belmontinfra <- as.data.frame(belmontinfra)
+names(belmontinfra) <- gsub("\\.", " ", names(belmontinfra))
+belmontinfralik <- likert(belmontinfra)
+plot(belmontinfralik, centered = FALSE, wrap = 30) + ggtitle("What services or functionalities do you expect from infrastructures?") +  theme(plot.title = element_text(size = 10,colour="black")) + ylab("Percentage") + theme(axis.title.y = element_text(size = 8, colour = 'black')) 
+```
+
+The top four functionalities highlight the data user perspective, i.e. that authorship and attribution information are highlighted, data are citable via persistent identifiers, links to publications are provided and restrictions, conditions and/or licensing information is communicated. Certification and interoperability are significantly less emphasized but still seen as most important by at least 2/5 of all respondents. 
+
+## Importance of open data for disciplinary communities
+Q11: In your community, how important is open data to...
+
+```{r, cache=F, echo=F}
+belmontdisc <- belmont[, 59:62]
+belmontdisc <- lapply(belmontdisc, factor, levels = c("Not Important", "Intermediate Important", "Very Important"))
+belmontdisc <- as.data.frame(belmontdisc)
+names(belmontdisc) <- gsub("\\.", " ", names(belmontdisc))
+belmontdisclik <- likert(belmontdisc)
+plot(belmontdisclik, centered = FALSE, wrap = 30) + ggtitle("In your community, how important is open data to...") +  theme(plot.title = element_text(size = 10,colour="black")) + ylab("Percentage") + theme(axis.title.y = element_text(size = 8, colour = 'black'))
+```
+
+When asked how important open data is for the disciplinary community, more than 4 out of 5 respondents highlighted that open data is very important for advancing research. Here has to be taken into account that participants to the survey may not be representative for the community and more positive towards the topic than the average researcher. In addition, every second respondent considers open data as important for supporting applications to societal problems. 
+
+## Motivators for publishing data as open data
+Q12: Which of the following are important motivators to publish your data as open data?
+
+```{r, cache=F, echo=F}
+belmontmotiv <- belmont[, 65:73]
+belmontmotiv <- lapply(belmontmotiv, factor, levels = c("Not Important", "Intermediate Important", "Very Important"))
+belmontmotiv <- as.data.frame(belmontmotiv)
+names(belmontmotiv) <- gsub("\\.", " ", names(belmontmotiv))
+belmontmotivlik <- likert(belmontmotiv)
+plot(belmontmotivlik, centered = FALSE, wrap = 30) + ggtitle("Motivators to publish data as open data") +  theme(plot.title = element_text(size = 10,colour="black")) + ylab("Percentage") + theme(axis.title.y = element_text(size = 8, colour = 'black'))
+
+plot(belmontmotivlik, type="heat")
+
+badnotDUorDP <- (is.na(belmontall$Data.User) & is.na(belmontall$Data.Provider)) # not either data user or data provider
+
+belmontmotivDU <- belmontmotiv[!is.na(belmont$Data.User), ] # subset Data User
+belmontmotivDP <- belmontmotiv[!is.na(belmont$Data.Provider), ] # subset Data Provider
+#belmontmotivDPnotDU <- belmontmotivDP[is.na(belmont$Data.User), ] # subset of data providers that are not data users 
+belmontmotivDPorDU <- belmontmotiv[!badnotDUorDP, ] # all data users OR data providers
+belmontmotivDPnotDU <- belmontmotiv[is.na(belmontall$Data.User) & !is.na(belmontall$Data.Provider), ] # all data providers that are not data users
+belmontmotivDM <- belmontmotiv[!is.na(belmont$Data.Manager), ] # subset Data Manager
+
+belmontmotivlikDU <- likert(belmontmotivDU)
+belmontmotivlikDP <- likert(belmontmotivDP)
+belmontmotivlikDPnotDU <- likert(belmontmotivDPnotDU)
+belmontmotivlikDM <- likert(belmontmotivDM)
+
+plot(belmontmotivlikDU, type="heat") + ggtitle("Motivators - Data Users")
+plot(belmontmotivlikDPnotDU, type="heat") + ggtitle("Motivators - Data Providers that are not Data Users")
+plot(belmontmotivlikDP, type="heat") + ggtitle("Motivators - Data Providers")
+plot(belmontmotivlikDM, type="heat") + ggtitle("Motivators - Data Managers")
+
+# create a LaTeX table of the Likert results for data managers
+#xtable(belmontmotivlikDM)
+
+## MANOVA on data managers vs. complement
+belmont_test <- belmont
+belmont_test$dummyDM <- is.na(belmont_test$Data.Manager)
+fitDMmot <- manova(cbind(Requests.from.data.users, Community.norms, Organizational.institutional.policy, Publisher.policy, Funder.policy, Scientific.professional.society.policy,Dissemination.and.recognition.of.your.work.research, Acceleration.of.scientific.research.and.applications, Personal.commitment.to.open.data) ~ dummyDM, data=belmont_test)
+
+#           Df   Pillai approx F num Df den Df  Pr(>F)  
+#dummyDM     1 0.022142     1.98      9    787 0.03882 *
+#Residuals 795                                          
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+summary.aov(fitDMmot)
+# Response Personal.commitment.to.open.data :
+#             Df Sum Sq Mean Sq F value    Pr(>F)    
+#dummyDM       1   4.71  4.7148  11.343 0.0007938 ***
+#Residuals   795 330.44  0.4157                      
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+## all other not significant >> same result with slightly larger p-value as already discovered by MWW test
+
+### barriers MANOVA on data managers vs. complement
+fitDMbarr <- manova(cbind(Legal.constraints, Organisational.constraints, Commercial.use.and.exploitation,  Loss.of.control.over.intellectual.property, Misinterpretation.or.misuse,                              Loss.of.credit.or.recognition, Difficulty.of.clarifying.rights.multiple.inputs.or.authors, Concerns.about.legal.liability.or.release, Concerns.about.impact.of.data.release,                 Desire.to.publish.results.before.releasing.data) ~ dummyDM, data=belmont_test) 
+summary(fitDMbarr)
+#           Df   Pillai approx F num Df den Df  Pr(>F)  
+#dummyDM     1 0.020984   1.6483     10    769 0.08892 .
+#Residuals 778                                          
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+Top motivators are driven by research-intrinsic motives, from general considerations, i.e. the acceleration of scientific research and applications, to personal motivations, i.e. dissemination and recognition of research results, personal commitment to open data and requests from data users. Policies play a less strong but significant role, lead by funder policies, and followed by scientific/professional society policies and organizational/institutional policies. Publisher policies are less important but are still recognized with some importance by almost 4/5 of all respondents. 
+
+The order of the top four motivators was the same for all three subgroups of data professionals (data user, data provider, data manager). However, the personal commitment of data managers to open data seems to be higher (70% Very important, 24.3% intermediate important, 5.7 not important) compared to data users (59.9%, 33.7%, 6.4%) and data providers (61.1%, 31.5%, 7.3%). A Wilcoxon rank-sum test and alternatively a two-sided MANOVA test on data managers vs. all other data professionals shows that the difference in motivation for "personal commitment to open data" is significant (see according p-values)
+
+
+## Motivators: Data managers' vs. other data professionals' commitment to open data
+Test if data managers significantly differ in their commitment to open data compared to all other data professionals. 
+```{r, cache=F, echo=FALSE}
+badnodatarole <- (is.na(belmont$Data.User) & is.na(belmont$Data.Provider) & is.na(belmont$Data.Manager) & is.na(belmont$Other.Data.Role)) # no data role available in either field
+# based on two-sample Mann-Whitney-Wilcoxon test: data managers vs complement
+# compare https://www.st-andrews.ac.uk/media/capod/students/mathssupport/OrdinalexampleR.pdf
+# introduce dummy variable for Data Manager with value 1 if true, 0 else
+belmont_DP_0 <- belmont[!badnodatarole, ] # all respondents that indicated a data role
+
+# bring the Likert levels into the correct order
+belmont_DP <- data.frame(lapply(belmont_DP_0[65:73], factor, levels = c("Not Important", "Intermediate Important", "Very Important")))
+
+belmont_DP$dummyDM <- is.na(belmont_DP_0$Data.Manager)
+belmont_DP$DM <- ifelse(belmont_DP$dummy==FALSE, 1, 0)
+# test if there is a statistically significant difference in responses of Data Managers vs. all other respondents, treat the Likert values as numeric values
+wilcox.test(as.numeric(Personal.commitment.to.open.data)~DM,data=belmont_DP)
+wilcox.test(as.numeric(Scientific.professional.society.policy)~DM,data=belmont_DP)
+wilcox.test(as.numeric(Requests.from.data.users)~DM,data=belmont_DP)
+wilcox.test(as.numeric(Publisher.policy)~DM,data=belmont_DP)
+wilcox.test(as.numeric(Organizational.institutional.policy)~DM,data=belmont_DP)
+wilcox.test(as.numeric(Funder.policy)~DM,data=belmont_DP)
+wilcox.test(as.numeric(Dissemination.and.recognition.of.your.work.research)~DM,data=belmont_DP)
+wilcox.test(as.numeric(Community.norms)~DM,data=belmont_DP)
+wilcox.test(as.numeric(Acceleration.of.scientific.research.and.applications)~DM,data=belmont_DP)
+```
+Only for the question about personal commitment to open data a significant difference between data managers and all other data professionals could be found (p-value= `r wilcox.test(as.numeric(Personal.commitment.to.open.data)~DM,data=belmont_DP)[3]` < 0.05).
+
+## Motivators for (data user) vs. (data providers that are not data users)
+Comparison of the subset of data users vs. data providers that are not data users themselves (multiple answers were allowed).
+```{r, cache=F, echo=FALSE}
+badnotDUorDP <- (is.na(belmont$Data.User) & is.na(belmont$Data.Provider)) # not either data user or data provider
+# based on two-sample Wilcox test: data managers vs complement
+# compare https://www.st-andrews.ac.uk/media/capod/students/mathssupport/OrdinalexampleR.pdf
+# introduce dummy variable for Data Manager with value 1 if true, 0 else
+belmont_DUorDP_0 <- belmont[!badnotDUorDP, ] # all respondents that indicated a data role
+
+# bring the Likert levels into the correct order
+belmont_DUorDP <- data.frame(lapply(belmont_DUorDP_0[65:73], factor, levels = c("Not Important", "Intermediate Important", "Very Important")))
+# add dummy variable
+belmont_DUorDP$dummyDP <- is.na(belmont_DUorDP_0$Data.User) # not a data user
+# add variable to mark disjoint subsets (data users) and (data providers that are not data users)
+belmont_DUorDP$DP <- ifelse(belmont_DUorDP$dummyDP==TRUE, 1, 0) # subset of data providers that are not data users marked with 1
+
+### subsets ok not in plot above and tests
+
+# test if there is a statistically significant difference in responses of Data Managers vs. all other respondents, treat the Likert values as numeric values
+wilcox.test(as.numeric(Personal.commitment.to.open.data)~DP,data=belmont_DUorDP)
+wilcox.test(as.numeric(Scientific.professional.society.policy)~DP,data=belmont_DUorDP)
+wilcox.test(as.numeric(Requests.from.data.users)~DP,data=belmont_DUorDP)
+wilcox.test(as.numeric(Publisher.policy)~DP,data=belmont_DUorDP)
+wilcox.test(as.numeric(Organizational.institutional.policy)~DP,data=belmont_DUorDP)
+wilcox.test(as.numeric(Funder.policy)~DP,data=belmont_DUorDP)
+wilcox.test(as.numeric(Dissemination.and.recognition.of.your.work.research)~DP,data=belmont_DUorDP)
+wilcox.test(as.numeric(Community.norms)~DP,data=belmont_DUorDP)
+wilcox.test(as.numeric(Acceleration.of.scientific.research.and.applications)~DP,data=belmont_DUorDP)
+```
+Differences seem mainly to hold for one motivators: respondents' view on the importance of scientific professional society policy (higher for data providers with p=0.024 significance).
+
+## Barriers for publishing data as open data
+Q13: What do you see as the major barriers for publishing data as open data?
+
+```{r, cache=F, echo=F}
+library(reshape)
+library(agricolae)
+library(likert)
+detach("package:reshape", unload = TRUE)
+library(reshape2)
+
+belmontbarr <- belmont[, 75:84]
+belmontbarr <- lapply(belmontbarr, factor, levels=c("Minor Barrier", "Barrier", "Major Barrier"))
+belmontbarr <- as.data.frame(belmontbarr)
+names(belmontbarr) <- gsub("\\.", " ", names(belmontbarr))
+belmontbarrlik <- likert(belmontbarr)
+plot(belmontbarrlik, centered = FALSE, wrap = 30) + ggtitle("Barriers to publish data as open data") +  theme(plot.title = element_text(size = 10,colour="black")) + ylab("Percentage") + theme(axis.title.y = element_text(size = 8, colour = 'black'))
+
+
+plot(belmontbarrlik, type="heat")
+
+# look at freetext for other barriers
+badbarr <- is.na(belmont$Other.barriers)
+otherbarr <- belmont$Other.barriers[!badbarr]
+#write.csv(otherbarr, "/Users/bschmid1/Dropbox/Belmont Forum/data/Otherbarriers.csv", row.names = FALSE)
+# look at freetext for other motivators
+badmot <- is.na(belmont$Other.motivators)
+othermot <- belmont$Other.motivators[!badmot]
+#write.csv(othermot, "/Users/bschmid1/Dropbox/Belmont Forum/data/Othermotivators.csv", row.names = FALSE)
+# look at freetext for other burden for access or reuse
+badburden <- is.na(belmont$Other.burden.for.access.or.reuse)
+otherburden <- belmont$Other.burden.for.access.or.reuse[!badburden]
+#write.csv(otherburden, "/Users/bschmid1/Dropbox/Belmont Forum/data/Otherburden.csv", row.names = FALSE)
+
+
+# compare data professions
+belmontbarrDU <- belmontbarr[!is.na(belmont$Data.User), ] # subset Data User
+belmontbarrDP <- belmontbarr[!is.na(belmont$Data.Provider), ] # subset Data Provider
+belmontbarrDM <- belmontbarr[!is.na(belmont$Data.Manager), ] # subset Data Manager
+
+belmontbarrlikDU <- likert(belmontbarrDU)
+belmontbarrlikDP <- likert(belmontbarrDP)
+belmontbarrlikDM <- likert(belmontbarrDM)
+
+plot(belmontbarrlikDU, type="heat") + ggtitle("Barriers - Data Users")
+plot(belmontbarrlikDP, type="heat") + ggtitle("Barriers - Data Providers")
+plot(belmontbarrlikDM, type="heat") + ggtitle("Barriers - Data Managers")
+
+# Test age group "31-35" for the barrier publish first before releasing the data
+# difference is statistically significant according to a MWW test
+belmont_test <- belmont
+belmont_test[, 75:84] <- lapply(belmont_test[, 75:84], factor, levels=c("Minor Barrier", "Barrier", "Major Barrier"))
+belmont_test$tAge <- ifelse(belmont$Age=="31-35", 1, 0)
+levels(belmont_test$tAge) <- c("0", "1")
+wilcox.test(as.numeric(Desire.to.publish.results.before.releasing.data)~tAge,data=belmont_test)
+
+#Wilcoxon rank sum test with continuity correction
+#data:  as.numeric(Desire.to.publish.results.before.releasing.data) by tAge
+#W = 40259.5, p-value = 0.0001258
+#alternative hypothesis: true location shift is not equal to 0
+
+## The null hypothesis can be rejected (MWW test, M=40259.5, p=0.0001***). 
+
+# introduce new variable for age clusters
+# cluster1: <=35, 36-50, 51+
+# cluster2: <=40, 41-50, 51+
+belmont_test$AgeCluster <- ifelse((belmont$Age=="<=20") | 
+(belmont$Age=="21-25") | (belmont$Age=="26-30") | (belmont$Age=="31-35"), 
+"20-35", 
+ifelse((belmont$Age=="36-40") | (belmont$Age=="41-45") | (belmont$Age=="46-50"), "36-50", "51+"))
+levels(belmont_test$AgeCluster) <- c("20-35", "36-50", "51+")
+
+belmont_test$AgeCluster2 <- ifelse((belmont$Age=="<=20") | 
+(belmont$Age=="21-25") | (belmont$Age=="26-30") | (belmont$Age=="31-35") | (belmont$Age=="36-40") , 
+"20-40", 
+ifelse((belmont$Age=="41-45") | (belmont$Age=="46-50"), "41-50", "51+"))
+levels(belmont_test$AgeCluster2) <- c("20-40", "41-50", "51+")
+
+# Desire to publish before releasing data - values by age cluster
+table(belmont_test$AgeCluster, belmont_test$Desire.to.publish.results.before.releasing.data)
+round(prop.table(table(belmont_test$AgeCluster, belmont_test$Desire.to.publish.results.before.releasing.data),1)*100,2)
+
+# Barplots
+#par(mfrow=c(1,2)) # does not fit nicely side-by-side
+# plot for cluster 1
+barplot(table(belmont_test$AgeCluster, belmont_test$Desire.to.publish.results.before.releasing.data), beside=T,cex.names=0.8, legend.text=c("20-35 yr-olds", "36-50 yr-olds", "51+ yr-olds"), args.legend=list(x="topright"))
+# plot for cluster 2
+barplot(table(belmont_test$AgeCluster2, belmont_test$Desire.to.publish.results.before.releasing.data), beside=T,cex.names=0.8, legend.text=c("20-40 yr-olds", "41-50 yr-olds", "51+ yr-olds"), args.legend=list(x="topright"))
+
+# Chi-Square Test on age clusters vs frequencies - for the two age clusters
+chisq.test(table(belmont_test$Desire.to.publish.results.before.releasing.data, belmont_test$AgeCluster))
+#	Pearsons Chi-squared test
+#data:  table(belmont_test$Desire.to.publish.results.before.releasing.data, belmont_test$AgeCluster)
+#X-squared = 9.7245, df = 4, p-value = 0.04533
+
+# Null hypothesis can be rejected on the 5% level (not very strong!). 
+
+chisq.test(table(belmont_test$Desire.to.publish.results.before.releasing.data, belmont_test$AgeCluster2))
+#    Pearsons Chi-squared test
+#data:  table(belmont_test$Desire.to.publish.results.before.releasing.data, belmont_test$AgeCluster2)
+#X-squared = 5.9935, df = 4, p-value = 0.1996
+
+# Kruskal-Wallis rank sum test
+belmont_test$AgeCluster <- as.factor(belmont_test$AgeCluster)
+belmont_test$AgeCluster2 <- as.factor(belmont_test$AgeCluster2)
+#kruskal.test(Desire.to.publish.results.before.releasing.data~AgeCluster,data=belmont_test)
+#Kruskal-Wallis rank sum test
+#data:  Desire.to.publish.results.before.releasing.data by AgeCluster
+#Kruskal-Wallis chi-squared = 2.6422, df = 2, p-value = 0.2668
+# ie no significant difference across AgeCluster
+
+# test for all barriers on AgeCluster
+#kw <- function(x) kruskal.test(x ~ AgeCluster, data=belmont_test)
+#apply(belmont_test[ , 75:84], 2, kw)
+# no significant differences for AgeCluster
+#kw1 <- function(x) kruskal.test(x ~ AgeCluster2, data=belmont_test)
+#apply(belmont_test[ , 75:84], 2, kw1)
+# no significant differences for AgeCluster2
+
+# test for all barriers on Country
+## Kruskal Wallis Test
+kw2 <- function(x) kruskal.test(x ~ Country, data=belmont_test)
+apply(belmont_test[ , 75:84], 2, kw2)
+#$Loss.of.control.over.intellectual.property
+#data:  x by Country
+#Kruskal-Wallis chi-squared = 89.2291, df = 64, p-value = 0.02031
+# all others not significant
+
+## MANOVA by AgeCluster
+fitageCl <- manova(cbind(Legal.constraints, Organisational.constraints, Commercial.use.and.exploitation,  Loss.of.control.over.intellectual.property, Misinterpretation.or.misuse,                              Loss.of.credit.or.recognition, Difficulty.of.clarifying.rights.multiple.inputs.or.authors, Concerns.about.legal.liability.or.release, Concerns.about.impact.of.data.release, Desire.to.publish.results.before.releasing.data) ~ AgeCluster, data=belmont_test)
+
+summary(fitageCl)
+#            Df   Pillai approx F num Df den Df Pr(>F)  
+#AgeCluster   2 0.038621   1.5064     20   1530 0.0697 .
+#Residuals  773                                         
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+summary.aov(fitageCl)
+# Response Concerns.about.impact.of.data.release :
+#             Df Sum Sq Mean Sq F value  Pr(>F)  
+#AgeCluster    2   3.92 1.96167  3.4096 0.03355 *
+#Residuals   773 444.74 0.57534                  
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Desire.to.publish.results.before.releasing.data :
+#             Df Sum Sq Mean Sq F value Pr(>F)  
+#AgeCluster    2   3.39 1.69734  3.3219 0.0366 *
+#Residuals   773 394.96 0.51095                 
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+fitCla1 <- aov(as.numeric(Concerns.about.impact.of.data.release) ~ AgeCluster, data=belmont_test)
+HSD.test(fitCla1, "AgeCluster", group=FALSE, console=TRUE)
+#              Difference pvalue sig.          LCL       UCL
+# 20-35 - 51+   0.18151147 0.0244    *  0.01873290 0.3442900
+
+fitCla2 <- aov(as.numeric(Desire.to.publish.results.before.releasing.data) ~ AgeCluster, data=belmont_test)
+HSD.test(fitCla2, "AgeCluster", group=FALSE, console=TRUE)
+#              Difference pvalue sig.          LCL       UCL
+# 20-35 - 51+   0.15965177 0.0418    *  0.004650472 0.3146531
+# Respondents of 20 to 35 years age expressed significantly higher concerns about the impact of data release (p=0.024) and the desire to publish results before releasing data (p=0.042) compared to respondents of age 51 and older. 
+
+fitageClmot <- manova(cbind(Requests.from.data.users, Community.norms, Organizational.institutional.policy, Publisher.policy, Funder.policy, Scientific.professional.society.policy,Dissemination.and.recognition.of.your.work.research, Acceleration.of.scientific.research.and.applications, Personal.commitment.to.open.data) ~ AgeCluster, data=belmont_test)
+summary(fitageClmot)
+#            Df   Pillai approx F num Df den Df  Pr(>F)  
+#AgeCluster   2 0.036087   1.6007     18   1568 0.05223 .
+#Residuals  791                                          
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+# no significant motivators by AgeCluster
+
+### MANOVA barriers & motivatory by country - subsetting based on all countries with at least 45 responses
+countries45 <- subset(Countrycount, Countrycount >= 45)
+c45 <- names(countries45)
+c45 <- names(countries45)
+belmont45_test <- subset(belmont_test, is.element(Country, c45)) # belmont45_test contains 707 observations
+#y <- apply(belmont45_test[ , 75:84], 2, cbind)
+#fitc45 <- manova(y ~ Country, data=belmont45_test) 
+# names(belmont45_test[ , 75:84])
+fitc45 <- manova(cbind(Legal.constraints, Organisational.constraints, Commercial.use.and.exploitation,  Loss.of.control.over.intellectual.property, Misinterpretation.or.misuse,                              Loss.of.credit.or.recognition, Difficulty.of.clarifying.rights.multiple.inputs.or.authors, Concerns.about.legal.liability.or.release, Concerns.about.impact.of.data.release, Desire.to.publish.results.before.releasing.data) ~ Country, data=belmont45_test) 
+summary(fitc45)
+#           Df  Pillai approx F num Df den Df    Pr(>F)    
+#Country     5 0.21311   1.9944     50   2240 5.011e-05 ***
+#Residuals 453                                             
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+### followed by univariate one-way ANOVAs
+summary.aov(fitc45)
+# Response Legal.constraints :
+#             Df  Sum Sq Mean Sq F value    Pr(>F)    
+#Country       5  12.896 2.57916  4.7751 0.0002901 ***
+#Residuals   453 244.677 0.54013                      
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#
+# Response Organisational.constraints :
+#             Df  Sum Sq Mean Sq F value Pr(>F)
+#Country       5   1.569 0.31370  0.5648  0.727
+#Residuals   453 251.599 0.55541               
+#
+# Response Commercial.use.and.exploitation :
+#             Df  Sum Sq Mean Sq F value   Pr(>F)   
+#Country       5   9.395 1.87907    3.06 0.009956 **
+#Residuals   453 278.178 0.61408                    
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#
+# Response Loss.of.control.over.intellectual.property :
+#             Df  Sum Sq Mean Sq F value    Pr(>F)    
+#Country       5  13.493 2.69854   4.396 0.0006419 ***
+#Residuals   453 278.080 0.61386                      
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#
+# Response Misinterpretation.or.misuse :
+#             Df Sum Sq Mean Sq F value  Pr(>F)  
+#Country       5   6.44 1.28806  2.1313 0.06066 .
+#Residuals   453 273.77 0.60436                  
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Loss.of.credit.or.recognition :
+#             Df  Sum Sq Mean Sq F value Pr(>F)
+#Country       5   1.164 0.23288  0.3965 0.8513
+#Residuals   453 266.056 0.58732               
+
+# Response Difficulty.of.clarifying.rights.multiple.inputs.or.authors :
+#             Df  Sum Sq Mean Sq F value  Pr(>F)  
+#Country       5   7.284 1.45671  2.9561 0.01225 *
+#Residuals   453 223.226 0.49277                  
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Concerns.about.legal.liability.or.release :
+#             Df  Sum Sq Mean Sq F value  Pr(>F)  
+#Country       5   5.487  1.0975  2.2033 0.05298 .
+#Residuals   453 225.641  0.4981                  
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Concerns.about.impact.of.data.release :
+#             Df  Sum Sq Mean Sq F value Pr(>F)  
+#Country       5   5.615 1.12307  1.9741 0.0812 .
+#Residuals   453 257.709 0.56889                 
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Desire.to.publish.results.before.releasing.data :
+#             Df  Sum Sq Mean Sq F value   Pr(>F)   
+#Country       5   8.361 1.67226   3.284 0.006342 **
+#Residuals   453 230.676 0.50922                    
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+#248 observations deleted due to missingness
+
+### Tukey post-hoc analysis of ANOVAs (with significant differences only)
+#fitc45 <- manova(cbind(Legal.constraints, Organisational.constraints, Commercial.use.and.exploitation,  Loss.of.control.over.intellectual.property, Misinterpretation.or.misuse,                              Loss.of.credit.or.recognition, Difficulty.of.clarifying.rights.multiple.inputs.or.authors, Concerns.about.legal.liability.or.release, Concerns.about.impact.of.data.release,                 Desire.to.publish.results.before.releasing.data) ~ Country, data=belmont45_test) 
+fitb1 <- aov(as.numeric(Legal.constraints) ~ Country, data=belmont45_test)
+outb1 <- HSD.test(fitb1, "Country", group=TRUE)
+outb1$groups
+#             trt    means  M
+#1 Australia      2.500000  a
+#2 Germany        2.388060  a
+#3 Italy          2.345238 ab
+#4 United Kingdom 2.287879 ab
+#5 France         2.090909 ab
+#6 United States  2.077465  b
+# ie the U.S. differ significantly from Australia and Germany
+
+HSD.test(fitb1, "Country", group=FALSE, console=TRUE)
+#                                Difference pvalue sig.         LCL        UCL
+#Australia - United States       0.42253521 0.0367    *  0.01543826 0.82963217
+#Germany - United States         0.31059491 0.0077   **  0.05380195 0.56738788
+# same result as above
+
+fitb2 <- aov(as.numeric(Commercial.use.and.exploitation) ~ Country, data=belmont45_test)
+outb2 <- HSD.test(fitb2, "Country", group=TRUE)
+outb2$groups
+#             trt    means  M
+#1 Italy          2.235294  a
+#2 Australia      2.088235 ab
+#3 France         2.023810 ab
+#4 Germany        2.007463 ab
+#5 United Kingdom 2.000000 ab
+#6 United States  1.812950  b
+# ie U.S. differs significantly from Italy
+
+HSD.test(fitb2, "Country", group=FALSE, console=TRUE)
+#Italy - United States           0.422344477 0.0013   **  0.11509541 0.72959354
+# same result as above
+
+fitb3 <- aov(as.numeric(Loss.of.control.over.intellectual.property) ~ Country, data=belmont45_test)
+outb3 <- HSD.test(fitb3, "Country", group=TRUE)
+outb3$groups
+#             trt    means  M
+#1 Italy          2.337349  a
+#2 Germany        2.126866 ab
+#3 United Kingdom 1.970149 ab
+#4 France         1.928571 ab
+#5 United States  1.858156  b
+#6 Australia      1.848485  b
+# ie Italy differs significantly from the U.S. and Australia
+
+HSD.test(fitb3, "Country", group=FALSE, console=TRUE)
+#                                Difference pvalue sig.         LCL         UCL
+#Australia - Italy              -0.48886455 0.0307    * -0.950371902 -0.02735720
+#Italy - United States           0.47919337 0.0002  ***  0.168936752  0.78944999
+
+fitb4 <- aov(as.numeric(Difficulty.of.clarifying.rights.multiple.inputs.or.authors) ~ Country, data=belmont45_test)
+outb4 <- HSD.test(fitb4, "Country", group=TRUE)
+outb4$groups
+#             trt    means  M
+#1 Italy          2.175000  a
+#2 Germany        2.089552  a
+#3 United Kingdom 1.909091 ab
+#4 France         1.883721 ab
+#5 Australia      1.823529 ab
+#6 United States  1.821429  b
+# ie the U.S. differ significantly from Germany and Italy
+
+HSD.test(fitb4, "Country", group=FALSE, console=TRUE)
+#                                Difference pvalue sig.         LCL         UCL
+#Germany - United States         0.26812367 0.0206    *  0.02546907 0.51077826
+#Italy - United States           0.35357143 0.0048   **  0.07216632 0.63497654
+
+fitb5 <- aov(as.numeric(Desire.to.publish.results.before.releasing.data) ~ Country, data=belmont45_test)
+outb5 <- HSD.test(fitb5, "Country", group=TRUE)
+outb5$groups
+#             trt    means  M
+#1 Germany        2.515152  a
+#2 United Kingdom 2.454545 ab
+#3 United States  2.380597 ab
+#4 Italy          2.287500 ab
+#5 France         2.230769 ab
+#6 Australia      2.058824  b
+# ie Australia differs significantly from Germany
+
+HSD.test(fitb5, "Country", group=FALSE, console=TRUE)
+#                                Difference pvalue sig.         LCL         UCL
+#Australia - Germany            -0.45632799 0.0128    * -0.85077815 -0.06187782
+# same as above
+
+### Likert by countries with at least 45 responses - BARRIERS ###
+# load likert and reshape first
+belmontbarrbC <- belmont45_test[, 75:84]
+belmontbarrbC <- as.data.frame(belmontbarrbC)
+names(belmontbarrbC) <- gsub("\\.", " ", names(belmontbarrbC))
+belmontbarrbClik <- likert(belmontbarrbC, grouping=belmont45_test$Country)
+summary(belmontbarrbClik)
+
+# for Belmont paper: values reorganized from xtable and MANOVA/ANOVA above 
+# xtable(summary(belmontbarrbClik))
+
+
+### MANOVA - Motivators by Country
+names(belmont_test[, 65:73])
+belmont_test[ , 65:73] <- lapply(belmont_test[ , 65:73], factor, levels = c("Not Important", "Intermediate Important", "Very Important"))
+
+fitMc45 <- manova(cbind(Requests.from.data.users, Community.norms,                    Organizational.institutional.policy, Publisher.policy, Funder.policy,                                       Scientific.professional.society.policy,Dissemination.and.recognition.of.your.work.research, Acceleration.of.scientific.research.and.applications, Personal.commitment.to.open.data) ~ Country, data=belmont45_test) 
+summary(fitMc45)
+#           Df  Pillai approx F num Df den Df    Pr(>F)    
+#Country     5 0.17054   1.8127     45   2310 0.0008163 ***
+#Residuals 466                                             
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+### summary of ANOVAs
+summary.aov(fitMc45)
+# Response Requests.from.data.users :
+#             Df Sum Sq Mean Sq F value Pr(>F)
+#Country       5   7.32 1.46329  1.6302 0.1505
+#Residuals   466 418.28 0.89759               
+
+# Response Community.norms :
+#             Df Sum Sq Mean Sq F value Pr(>F)
+#Country       5   3.58 0.71655  0.8434 0.5194
+#Residuals   466 395.91 0.84959               
+
+# Response Organizational.institutional.policy :
+#             Df Sum Sq Mean Sq F value Pr(>F)
+#Country       5   4.09 0.81889  0.9652 0.4387
+#Residuals   466 395.36 0.84842               
+
+# Response Publisher.policy :
+#             Df Sum Sq Mean Sq F value Pr(>F)
+#Country       5   5.70 1.13933  1.5328 0.1781
+#Residuals   466 346.37 0.74329               
+
+# Response Funder.policy :
+#             Df Sum Sq Mean Sq F value   Pr(>F)   
+#Country       5  16.41  3.2827  3.9936 0.001476 **
+#Residuals   466 383.04  0.8220                    
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Scientific.professional.society.policy :
+#             Df Sum Sq Mean Sq F value Pr(>F)
+#Country       5   4.16 0.83161  0.9801 0.4294
+#Residuals   466 395.39 0.84848               
+
+# Response Dissemination.and.recognition.of.your.work.research :
+#             Df Sum Sq Mean Sq F value Pr(>F)
+#Country       5   3.95 0.79090  1.0637 0.3798
+#Residuals   466 346.50 0.74356               
+
+# Response Acceleration.of.scientific.research.and.applications :
+#             Df Sum Sq Mean Sq F value Pr(>F)
+#Country       5   5.08  1.0167  1.3757  0.232
+#Residuals   466 344.37  0.7390               
+
+# Response Personal.commitment.to.open.data :
+#             Df Sum Sq Mean Sq F value   Pr(>F)   
+#Country       5  14.84 2.96892  3.7192 0.002601 **
+#Residuals   466 371.99 0.79827                    
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#
+#235 observations deleted due to missingness
+
+### Tukey post-hoc analysis of ANOVAs (with significant differences only)
+fitMb1 <- aov(as.numeric(Funder.policy) ~ Country, data=belmont45_test)
+outMb1 <- HSD.test(fitMb1, "Country", group=TRUE)
+outMb1$groups
+#             trt    means  M
+#1 United Kingdom 2.462687  a
+#2 United States  2.397163  a
+#3 Australia      2.117647 ab
+#4 France         2.047619 ab
+#5 Germany        2.037037  b
+#6 Italy          1.962500  b
+# Germany differs significantly from the UK and the U.S.
+# Italy differs significantly from the UK and the U.S.
+
+HSD.test(fitMb1, "Country", group=FALSE, console=TRUE)
+#                                Difference pvalue sig.        LCL         UCL
+#Germany - United Kingdom       -0.42564953 0.0220    * -0.8134280 -0.03787105
+#Germany - United States        -0.36012608 0.0133    * -0.6725832 -0.04766898
+#Italy - United Kingdom         -0.50018657 0.0119    * -0.9299095 -0.07046359
+#Italy - United States          -0.43466312 0.0087   ** -0.7978699 -0.07145639
+# same result as with grouping
+
+fitMb2 <- aov(as.numeric(Personal.commitment.to.open.data) ~ Country, data=belmont45_test)
+outMb2 <- HSD.test(fitMb2, "Country", group=TRUE)
+outMb2$groups
+#             trt    means  M
+#1 United States  2.503704  a
+#2 United Kingdom 2.412698 ab
+#3 Germany        2.333333 ab
+#4 France         2.214286 ab
+#5 Italy          2.111111  b
+#6 Australia      1.911765  b
+# The U.S. differ significantly from Italy and Australia. 
+
+HSD.test(fitMb2, "Country", group=FALSE, console=TRUE)
+#                                Difference pvalue sig.        LCL         UCL
+#Australia - United States      -0.59193900 0.0080   ** -1.0827516 -0.10112636
+#Italy - United States          -0.39259259 0.0231    * -0.7520904 -0.03309481
+# same result as above
+
+### Country cluster by continent - NorthAmerica, Asia, Africa, Latin America, Europe, AustraliaNZ
+#belmont_test$CountryCl <- ifelse(belmont$Country %in% c("China", "Japan", "India", "Korea, South", "Taiwan", "Malaysia", "Iran", "Israel", "Afghanistan", "Bangladesh", "Burma", "Cambodia", "Hong Kong", "Indonesia", "Iraq", "Kuwait", "Sri Lanka", "Thailand", "Singapore", "Pakistan", "Lebanon", "Nepal", "Papua New Guinea", "Fiji"), "Asia", ifelse(belmont$Country %in% c("Canada", "United States"), "NorthAmerica", ifelse(belmont$Country %in% c("Argentina", "Colombia", "Brazil", "Mexico", "Chile", "Peru", "Cuba", "Uruguay", "Ecuador", "French Guiana"), "LatinAmerica", ifelse(belmont$Country %in% c("Nigeria", "Kenya", "Congo, Democratic Republic of the", "Zambia", "South Africa", "Egypt","Senegal", "Ghana", "Burkina Faso"), "Africa", ifelse(belmont$Country %in% c("Australia", "New Zealand"), "AustraliaNZ", "Europe"))))))
+
+belmont_test$CountryCl <- ifelse(belmont$Country %in% c("China", "Japan", "India", "Korea, South", "Taiwan", "Malaysia", "Iran", "Israel", "Afghanistan", "Bangladesh", "Burma", "Cambodia", "Hong Kong", "Indonesia", "Iraq", "Kuwait", "Sri Lanka", "Thailand", "Singapore", "Pakistan", "Lebanon", "Nepal", "Papua New Guinea", "Fiji"), "Asia", ifelse(belmont$Country %in% c("Canada", "United States"), "NorthAmerica", "else"))
+belmont_test$CountryCl <- ifelse(belmont$Country %in% c("Argentina", "Colombia", "Brazil", "Mexico", "Chile", "Peru", "Cuba", "Uruguay", "Ecuador", "French Guiana"), "LatinAmerica", ifelse(belmont$Country %in% c("Nigeria", "Kenya", "Congo, Democratic Republic of the", "Zambia", "South Africa", "Egypt","Senegal", "Ghana", "Burkina Faso"), "Africa", belmont_test$CountryCl))
+belmont_test$CountryCl <- ifelse(belmont$Country %in% c("Australia", "New Zealand"), "AustraliaNZ", ifelse(belmont_test$CountryCl=="else", "Europe", belmont_test$CountryCl))
+# correct for NAs
+belmont_test$CountryCl <- ifelse(is.na(belmont$Country), NA, belmont_test$CountryCl)
+                                                                                                           table(belmont_test$CountryCl)
+#      Africa         Asia  AustraliaNZ       Europe LatinAmerica NorthAmerica 
+#          14          130           53          797           38          216 
+# sum too small for Africa for testing
+
+## MANOVA on barriers/motivators for country cluster
+fitCClbarr <- manova(cbind(Legal.constraints, Organisational.constraints, Commercial.use.and.exploitation,  Loss.of.control.over.intellectual.property, Misinterpretation.or.misuse,                              Loss.of.credit.or.recognition, Difficulty.of.clarifying.rights.multiple.inputs.or.authors, Concerns.about.legal.liability.or.release, Concerns.about.impact.of.data.release,                 Desire.to.publish.results.before.releasing.data) ~ CountryCl, data=belmont_test) 
+summary(fitCClbarr)
+
+#           Df  Pillai approx F num Df den Df    Pr(>F)    
+#CountryCl   5 0.16335   2.5871     50   3830 9.066e-09 ***
+#Residuals 771                                             
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+summary.aov(fitCClbarr)
+# Response Legal.constraints :
+#             Df Sum Sq Mean Sq F value    Pr(>F)    
+#CountryCl     5  15.65 3.13027  5.6531 3.958e-05 ***
+#Residuals   771 426.92 0.55372                      
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Organisational.constraints :
+#             Df Sum Sq Mean Sq F value  Pr(>F)   
+#CountryCl     5   8.90 1.78095  3.2568 0.00644 **
+#Residuals   771 421.62 0.54684                   
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Commercial.use.and.exploitation :
+#             Df Sum Sq Mean Sq F value    Pr(>F)    
+#CountryCl     5  18.43  3.6867  6.1717 1.278e-05 ***
+#Residuals   771 460.57  0.5974                      
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Loss.of.control.over.intellectual.property :
+#             Df Sum Sq Mean Sq F value    Pr(>F)    
+#CountryCl     5  14.61 2.92240  4.8607 0.0002195 ***
+#Residuals   771 463.54 0.60123                      
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#
+# Response Misinterpretation.or.misuse :
+#             Df Sum Sq Mean Sq F value   Pr(>F)   
+#CountryCl     5  10.74 2.14752  3.5184 0.003755 **
+#Residuals   771 470.59 0.61036                    
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Loss.of.credit.or.recognition :
+#             Df Sum Sq Mean Sq F value  Pr(>F)  
+#CountryCl     5   5.69 1.13848  1.9409 0.08538 .
+#Residuals   771 452.25 0.58657                  
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Difficulty.of.clarifying.rights.multiple.inputs.or.authors :
+#             Df Sum Sq Mean Sq F value   Pr(>F)   
+#CountryCl     5  10.02 2.00414   3.993 0.001393 **
+#Residuals   771 386.98 0.50192                    
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Concerns.about.legal.liability.or.release :
+#             Df Sum Sq Mean Sq F value    Pr(>F)    
+#CountryCl     5  26.75  5.3490  10.715 5.669e-10 ***
+#Residuals   771 384.89  0.4992                      
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Concerns.about.impact.of.data.release :
+#             Df Sum Sq Mean Sq F value    Pr(>F)    
+#CountryCl     5  13.75 2.75055  4.8681 0.0002161 ***
+#Residuals   771 435.63 0.56502                      
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Desire.to.publish.results.before.releasing.data :
+#             Df Sum Sq Mean Sq F value   Pr(>F)   
+#CountryCl     5   8.43 1.68668  3.3303 0.005538 **
+#Residuals   771 390.48 0.50646                    
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+CCla1 <- aov(as.numeric(Legal.constraints) ~ CountryCl, data=belmont_test)
+HSD.test(CCla1, "CountryCl", group=TRUE)$groups
+# Respondents from Africa and Asia expressed significantly stronger concerns about legal constraints than respondents from all other regions.
+#a: Africa, Asia, ab: other
+
+HSD.test(CCla1, "CountryCl", group=FALSE, console=TRUE)
+#Asia - NorthAmerica          0.44579125 0.0002  ***  0.15386356 0.7377189
+#Europe - NorthAmerica        0.20975860 0.0227    *  0.01797671 0.4015405
+# the above does not reflect this very well - use the non-grouped comparison!
+# Respondents from Asia (p=0.002) and Europe (p=0.023) expressed significantly stronger concerns about legal constraints than respondents from North America. 
+
+CCla2 <- aov(as.numeric(Commercial.use.and.exploitation) ~ CountryCl, data=belmont_test)
+HSD.test(CCla2, "CountryCl", group=TRUE)$groups
+# a: LA > ab: Africa, Asia, AustraliaNZ > b: Europe, NA
+# LA signif stronger than Europe and NA
+
+HSD.test(CCla2, "CountryCl", group=FALSE, console=TRUE)
+#                             Difference pvalue sig.         LCL         UCL
+#Asia - NorthAmerica          0.43667626 0.0005  ***  0.13749038  0.73586214
+#Europe - LatinAmerica       -0.47368421 0.0200    * -0.90126384 -0.04610458
+#Europe - NorthAmerica        0.23128473 0.0116    *  0.03292401  0.42964546
+#LatinAmerica - NorthAmerica  0.70496894 0.0001  ***  0.25342838  1.15650951
+# Respondents from Latin America (p<0.001), Asia (p<0.001) and Europe (p=0.012) expressed significantly stronger concerns about commercial use and exploitation than respondents from North America. Respondents from Latin America are also stronger concerned than respondents from Europe (p=0.02). 
+
+CCla3 <- aov(as.numeric(Loss.of.control.over.intellectual.property) ~ CountryCl, data=belmont_test)
+HSD.test(CCla3, "CountryCl", group=TRUE)$groups
+# a: Asia > ab: LA, Europe > b: NA, AustraliaNZ, Africa
+# Respondents from Asia were significantly more concerned about the loss of control over intellectual property than respondents from North America, Australia/New Zealand and Africa. 
+
+HSD.test(CCla3, "CountryCl", group=FALSE, console=TRUE)
+#                             Difference pvalue sig.          LCL       UCL
+#Asia - AustraliaNZ           0.47659855 0.0237    *  0.038844759 0.9143523
+#Asia - NorthAmerica          0.46341463 0.0002  ***  0.164461627 0.7623676
+#Europe - NorthAmerica        0.21029708 0.0291    *  0.012877104 0.4077171
+# Respondents from Asia were significantly more concerned about the loss of control over intellectual property than respondents from both North America (p<0.001) and Australia/New Zealand (p=0.039). Moreover, European respondents expressed a significantly stronger agreement with this statement than respondents from North America (p=0.029).
+
+CCla4 <- aov(as.numeric(Misinterpretation.or.misuse) ~ CountryCl, data=belmont_test)
+HSD.test(CCla4, "CountryCl", group=TRUE)$groups
+# a: Asia > ab: LA, Africa, NA > b: Europe, AustraliaNZ
+# Respondents from Asia were more concerned about misinterpretation or misuse than respondents from Europe and Australia/New Zealand. 
+
+HSD.test(CCla4, "CountryCl", group=FALSE, console=TRUE)
+#Asia - Europe                0.27155992 0.0388    *  0.008170743 0.5349491
+# Respondents from Asia were more concerned about misinterpretation or misuse than respondents from Europe (p=0.039). 
+
+CCla5 <- aov(as.numeric(Difficulty.of.clarifying.rights.multiple.inputs.or.authors) ~ CountryCl, data=belmont_test)
+HSD.test(CCla5, "CountryCl", group=TRUE)$groups
+# a: Asia > ab: LA, Europe > b: NA, AustraliaNZ, Africa
+
+HSD.test(CCla5, "CountryCl", group=FALSE, console=TRUE)
+#Asia - NorthAmerica          0.38473926 0.0011   **  0.108671103 0.6608074
+#Regarding difficulties of clarifying rights vis-a-vis multiple inputs or authors respondents from Asia expressed significantly higher concerns than those from North America (p=0.001). 
+
+CCla6 <- aov(as.numeric(Concerns.about.legal.liability.or.release) ~ CountryCl, data=belmont_test)
+HSD.test(CCla6, "CountryCl", group=TRUE)$groups
+# a: Asia > ab: LA > b: Europe, AustraliaNZ, NA, Africa
+
+HSD.test(CCla6, "CountryCl", group=FALSE, console=TRUE)
+#Asia - AustraliaNZ           0.55006418 0.0011   **  0.15329964 0.9468287
+#Asia - Europe                0.51614268 0.0000  ***  0.27587929 0.7564061
+#Asia - NorthAmerica          0.66463415 0.0000  ***  0.39118306 0.9380852
+# Respondents from Asia were significantly more concerned about legal liability of data or the release of data than respondents from Europe (p<0.001), North America (p<0.001) and Australia / New Zealand (p=0.001).
+
+CCla7 <- aov(as.numeric(Concerns.about.impact.of.data.release) ~ CountryCl, data=belmont_test)
+HSD.test(CCla7, "CountryCl", group=TRUE)$groups
+# a: Asia > ab: LA b: All other
+
+HSD.test(CCla7, "CountryCl", group=FALSE, console=TRUE)
+#Asia - AustraliaNZ           0.47240051 0.0171    *  0.05251938 0.8922816
+#Asia - Europe                0.35540745 0.0010  ***  0.10104484 0.6097701
+#Asia - NorthAmerica          0.43601325 0.0003  ***  0.14603532 0.7259912
+# Similarly, Asian respondents expressed significantly higher concerns about the impact of data release compared to respondents from Europe (p<0.001), North America (p<0.001) and Australia / New Zealand (p=0.017). 
+
+CCla8 <- aov(as.numeric(Desire.to.publish.results.before.releasing.data) ~ CountryCl, data=belmont_test)
+HSD.test(CCla8, "CountryCl", group=TRUE)$groups
+# a: Asia, Europe > ab: NA, LA > b: AustraliaNZ, Africa
+
+HSD.test(CCla8, "CountryCl", group=FALSE, console=TRUE)
+#Asia - AustraliaNZ           0.48486842 0.0076   **  0.08392967  0.88580717
+#AustraliaNZ - Europe        -0.36565636 0.0282    * -0.70776969 -0.02354303
+# The desire to publish before releasing data was significantly higher by respondents from Asia compared to both those from Australia / New Zealand (p=0.008) and Europe (p=0.028). 
+
+fitCClmot <- manova(cbind(Requests.from.data.users, Community.norms, Organizational.institutional.policy, Publisher.policy, Funder.policy, Scientific.professional.society.policy,Dissemination.and.recognition.of.your.work.research, Acceleration.of.scientific.research.and.applications, Personal.commitment.to.open.data) ~ CountryCl, data=belmont_test)
+summary(fitCClmot)
+#           Df Pillai approx F num Df den Df    Pr(>F)    
+#CountryCl   5 0.1159   2.0672     45   3920 4.003e-05 ***
+#Residuals 788                                            
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# restricting MANOVA to a pair 
+summary(manova(cbind(Requests.from.data.users, Community.norms, Organizational.institutional.policy, Publisher.policy, Funder.policy, Scientific.professional.society.policy,Dissemination.and.recognition.of.your.work.research, Acceleration.of.scientific.research.and.applications, Personal.commitment.to.open.data) ~ CountryCl, data = belmont_test, subset = CountryCl %in% c("NorthAmerica", "Europe")))
+
+
+summary.aov(fitCClmot)
+
+# Response Publisher.policy :
+#             Df Sum Sq Mean Sq F value   Pr(>F)   
+#CountryCl     5  10.05 2.01066  4.0392 0.001261 **
+#Residuals   788 392.26 0.49779                    
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Funder.policy :
+#             Df Sum Sq Mean Sq F value  Pr(>F)  
+#CountryCl     5   5.79 1.15883   2.359 0.03868 *
+#Residuals   788 387.10 0.49124                  
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Scientific.professional.society.policy :
+#             Df Sum Sq Mean Sq F value    Pr(>F)    
+#CountryCl     5   9.64 1.92856   4.217 0.0008657 ***
+#Residuals   788 360.38 0.45733                      
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Personal.commitment.to.open.data :
+#             Df Sum Sq Mean Sq F value  Pr(>F)  
+#CountryCl     5   5.34 1.06755  2.5565 0.02632 *
+#Residuals   788 329.06 0.41759                  
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+CClmota1 <- aov(as.numeric(Publisher.policy) ~ CountryCl, data=belmont_test)
+HSD.test(CClmota1, "CountryCl", group=TRUE)$groups
+# a: Asia, Europe > ab: NA, LA > b: AustraliaNZ, Africa
+
+HSD.test(CClmota1, "CountryCl", group=FALSE, console=T)
+#                             Difference pvalue sig.         LCL        UCL
+#Asia - Europe                0.29241354 0.0060   **  0.05523973 0.52958735
+# Publisher policies were seen as a significantly higher motivator by respondents from Asia compared to those from Europe (p=0.006).
+
+CClmota2 <- aov(as.numeric(Funder.policy) ~ CountryCl, data=belmont_test)
+HSD.test(CClmota2, "CountryCl", group=TRUE)$groups
+# all in a - ie no significant difference???
+#HSD.test(CClmota2, "CountryCl", group=FALSE, console=T)
+# no significant difference betw pairs
+
+HSD.test(CClmota2, "CountryCl", group=FALSE, console=T)
+# no significant differences
+
+CClmota3 <- aov(as.numeric(Scientific.professional.society.policy) ~ CountryCl, data=belmont_test)
+HSD.test(CClmota3, "CountryCl", group=TRUE)$groups
+# a: Africa, Asia > ab: all other
+#HSD.test(CClmota3, "CountryCl", group=FALSE, console=T)
+#                             Difference pvalue sig.         LCL        UCL
+#Asia - AustraliaNZ           0.45175439 0.0085   **  0.07480402 0.8287048
+#Asia - Europe                0.23999375 0.0303    *  0.01364660 0.4663409
+#Asia - NorthAmerica          0.37215321 0.0007  ***  0.11263600 0.6316704
+# all other not significant
+# Respondents from Asia considered scientific professional society policy as a significantly higher motivator than respondents from Europe (p=0.03), North America (p<0.001) and Australia / New Zealand (p=0.009).
+
+CClmota4 <- aov(as.numeric(Personal.commitment.to.open.data) ~ CountryCl, data=belmont_test)
+HSD.test(CClmota4, "CountryCl", group=TRUE)$groups
+# all in group a - no significant difference!!
+#TukeyHSD(CClmota4, 'CountryCl', conf.level=0.95) 
+# shows details of p-values
+
+HSD.test(CClmota4, "CountryCl", group=FALSE, console=T)
+# no significant difference
+
+### Employment role ###
+# test for all barriers on Employment.role
+kw3 <- function(x) kruskal.test(x ~ Employment.role, data=belmont_test)
+apply(belmont_test[ , 75:84], 2, kw3)
+#$Loss.of.control.over.intellectual.property
+#data:  x by Employment.role
+#Kruskal-Wallis chi-squared = 10.318, df = 4, p-value = 0.0354
+# all others not significant
+
+round(prop.table(table(belmont_test$Loss.of.control.over.intellectual.property, belmont_test$Employment.role), 2)*100, 2)
+               
+ #               Academia Business Government  Media Non-profit
+ # Minor Barrier    25.95    42.86      33.77   0.00      18.37
+ # Barrier          35.54    42.86      40.26 100.00      61.22
+ # Major Barrier    38.51    14.29      25.97   0.00      20.41
+
+
+# Cluster Employment role: Academia vs. other areas
+library(vcd)
+belmont_test$EmploymentCluster <- ifelse(belmont$Employment.role=="Academia", 1, 0)
+belmont_test$EmploymentCluster2 <- ifelse(belmont$Employment.role=="Academia", "Academia", ifelse(belmont$Employment.role=="Government", "Govt.", "Other"))
+#mosaic(~ AgeCluster + Desire.to.publish.results.before.releasing.data + EmploymentCluster, data=belmont_test, shade=TRUE, legend=TRUE)
+mosaic(~ EmploymentCluster2 + Desire.to.publish.results.before.releasing.data + AgeCluster, data=belmont_test, shade=TRUE, legend=TRUE, rep=c(AgeCluster=FALSE), split_vertical=TRUE)
+
+## MANOVA - by Employment role
+fitEmpl <- manova(cbind(Requests.from.data.users, Community.norms, Organizational.institutional.policy, Publisher.policy, Funder.policy, Scientific.professional.society.policy,Dissemination.and.recognition.of.your.work.research, Acceleration.of.scientific.research.and.applications, Personal.commitment.to.open.data) ~ Employment.role, data=belmont_test)
+
+summary(fitEmpl)
+#                 Df   Pillai approx F num Df den Df   Pr(>F)   
+#Employment.role   4 0.085726   1.8445     36   3032 0.001649 **
+#Residuals       763                                            
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+summary.aov(fitEmpl)
+# Response Publisher.policy :
+#                 Df Sum Sq Mean Sq F value    Pr(>F)    
+#Employment.role   4   9.44 2.35974  4.7542 0.0008572 ***
+#Residuals       763 378.72 0.49635                      
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+fitEmpla1 <- aov(as.numeric(Publisher.policy) ~ Employment.role, data=belmont_test)
+HSD.test(fitEmpla1, "Employment.role", group=FALSE, console=TRUE)
+#                          Difference pvalue sig.         LCL       UCL
+#Academia - Government    0.243289693 0.0015   **  0.06811963 0.4184598
+# Respondents from academia are significantly more motivated by publisher policies than respondents working at government organizations (p=0.002). 
+
+fitEmplbarr <- manova(cbind(Legal.constraints, Organisational.constraints, Commercial.use.and.exploitation,  Loss.of.control.over.intellectual.property, Misinterpretation.or.misuse,                              Loss.of.credit.or.recognition, Difficulty.of.clarifying.rights.multiple.inputs.or.authors, Concerns.about.legal.liability.or.release, Concerns.about.impact.of.data.release,                 Desire.to.publish.results.before.releasing.data) ~ Employment.role, data=belmont_test)
+summary(fitEmplbarr)
+#                 Df   Pillai approx F num Df den Df Pr(>F)
+#Employment.role   4 0.060358   1.1353     40   2964 0.2586
+#Residuals       747       
+
+
+### Testing for differences on clustered age group levels ###
+### overall no significant findings!!! ###
+
+# MWW Test on single age groups vs all others
+# 36-50 yr-olds vs all others - for AgeCluster
+#belmont_test$tAge <- ifelse(belmont_test$AgeCluster=="36-50", 1, 0)
+#levels(belmont_test$tAge) <- c("0", "1")
+#wilcox.test(as.numeric(Desire.to.publish.results.before.releasing.data)~tAge,data=belmont_test)
+#    Wilcoxon rank sum test with continuity correction
+#data:  as.numeric(Desire.to.publish.results.before.releasing.data) by tAge
+#W = 84353, p-value = 0.4603
+#alternative hypothesis: true location shift is not equal to 0
+
+# test for age group 51+ vs all others - for age cluster AgeCluster
+#belmont_test$tAge <- ifelse(belmont_test$AgeCluster=="51+", 1, 0)
+#levels(belmont_test$tAge) <- c("0", "1")
+#wilcox.test(as.numeric(Desire.to.publish.results.before.releasing.data)~tAge,data=belmont_test)
+#    Wilcoxon rank sum test with continuity correction
+#data:  as.numeric(Desire.to.publish.results.before.releasing.data) by tAge
+#W = 69402, p-value = 0.4026
+#alternative hypothesis: true location shift is not equal to 0
+
+# test for age group 20-35 - for age cluster AgeCluster
+belmont_test$tAge <- ifelse(belmont_test$AgeCluster=="20-35", 1, 0)
+levels(belmont_test$tAge) <- c("0", "1")
+wilcox.test(as.numeric(Desire.to.publish.results.before.releasing.data)~tAge,data=belmont_test)
+#Wilcoxon rank sum test with continuity correction
+#data:  as.numeric(Desire.to.publish.results.before.releasing.data) by tAge
+#W = 66097, p-value = 0.1068
+#alternative hypothesis: true location shift is not equal to 0
+
+# test for age group 41-50 in age cluster AgeCluster2
+#belmont_test$tAge <- ifelse(belmont_test$AgeCluster2=="41-50", 1, 0)
+#levels(belmont_test$tAge) <- c("0", "1")
+#wilcox.test(as.numeric(Desire.to.publish.results.before.releasing.data)~tAge,data=belmont_test)
+#    Wilcoxon rank sum test with continuity correction
+#data:  as.numeric(Desire.to.publish.results.before.releasing.data) by tAge
+#W = 66511, p-value = 0.3962
+#alternative hypothesis: true location shift is not equal to 0
+
+# 20-35 yr-olds vs 51+ yr-olds
+belmont_test0 <- subset(belmont_test, AgeCluster=="20-35" | AgeCluster=="51+")
+belmont_test0$tAge <- ifelse(belmont_test0$AgeCluster=="20-35", 1, 0)
+wilcox.test(as.numeric(Desire.to.publish.results.before.releasing.data)~tAge,data=belmont_test0)
+#Wilcoxon rank sum test with continuity correction
+#data:  as.numeric(Desire.to.publish.results.before.releasing.data) by tAge
+#W = 25878, p-value = 0.1464
+#alternative hypothesis: true location shift is not equal to 0
+
+# 20-35 yr-olds vs 36-50 yr-olds
+belmont_test1 <- subset(belmont_test, AgeCluster=="20-35" | AgeCluster=="36-50")
+belmont_test1$tAge <- ifelse(belmont_test1$AgeCluster=="20-35", 1, 0)
+wilcox.test(as.numeric(Desire.to.publish.results.before.releasing.data)~tAge,data=belmont_test1)
+#Wilcoxon rank sum test with continuity correction
+#data:  as.numeric(Desire.to.publish.results.before.releasing.data) by tAge
+#W = 40219, p-value = 0.1594
+#alternative hypothesis: true location shift is not equal to 0
+
+# Consider to look at Likert grouped by AgeCluster
+
+# By employment role
+barplot(prop.table(table(belmont_test$Desire.to.publish.results.before.releasing.data, belmont_test$Employment.role), 2), cex.names=0.7)
+title("Desire to publish before releasing data - by employment area", font=5)
+
+
+# MANOVA - Barriers by age cluster - Cluster
+# test significance
+summary(manova(cbind(Desire.to.publish.results.before.releasing.data, Legal.constraints)~ AgeCluster, data=belmont_test))
+# single anova test
+a1 <- aov(as.numeric(Desire.to.publish.results.before.releasing.data) ~ AgeCluster, data=belmont_test)
+summary(a1)
+#              Df Sum Sq Mean Sq F value Pr(>F)  
+#AgeCluster    2    3.4  1.7124   3.336 0.0361 *
+#Residuals   817  419.4  0.5133                 
+#
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#433 observations deleted due to missingness
+
+# Post-hoc Tukey analysis to identify on which levels the significant difference is located
+posthoc <- TukeyHSD(a1, 'AgeCluster', conf.level=0.95)
+posthoc
+
+#  Tukey multiple comparisons of means
+#    95% family-wise confidence level
+#Fit: aov(formula = as.numeric(Desire.to.publish.results.before.releasing.data) ~ AgeCluster, data = belmont_test)
+#$AgeCluster
+#                   diff        lwr          upr     p adj
+#36-50-20-35 -0.12237174 -0.2624989  0.017755369 0.1010479
+#51+-20-35   -0.15965177 -0.3146531 -0.004650472 0.0417704
+#51+-36-50   -0.03728003 -0.1809937  0.106433685 0.8152018
+
+library(agricolae) # to use function HSD 
+out <- HSD.test(a1, "AgeCluster", group=TRUE)
+out$groups
+#    trt    means  M
+#1 20-35 2.495935  a
+#2 36-50 2.373563 ab
+#3 50+   2.336283  b
+
+# the ones with the same letters do not differ significantly, ie only the 20-35 vs 51+ year-olds are significantly different
+
+
+```
+
+Overall, the most important barriers for publishing data as open data are to publish results before releasing data, legal constraints, loss of credit or recognition and possible misinterpretation or misuse. Concerns about legal liability for data or release of data are least-pronounced.
+
+The three major barriers appear in the same order for all three types of data professionals, percentages for "major barrier", percentages vary by up to 5% in the "major barrier" category.
+
+
+## Discovery of data
+Q14: How do you normally discover open data?
+
+```{r, cache=F, echo=F}
+belmontdiscover <- belmont[, 86:95]
+#names(belmontdiscover)
+#[1] "References.in.journal.articles"            "Newsletters.or.other.publications"        
+#[3] "Government.or.institutional.announcements" "Searching.in.specific.data.repositories"  
+#[5] "Web.search.engines"                        "Directories.or.catalogs"                  
+#[7] "Social.media"                              "Blogs"                                    
+#[9] "Direct requests to data providers"         "Other discovery"      
+names(belmontdiscover) <- gsub("\\.", " ", names(belmontdiscover))
+discover <- apply(belmontdiscover, 2, function(x) sum(!is.na(x)))
+discover <- sort(discover, decreasing=TRUE)
+par(las=2)
+#mp <- barplot(discover, axisnames=F, col=terrain.colors(10), beside=T)
+#legend("topright", legend=names(discover), cex=0.5, fill=terrain.colors(10)) 
+#title("How do you normally discover data?")
+# save PDF with 9 x 7 cm size
+
+
+# Plot with "other discovery" included
+belmontdiscoverAll <- belmont[, 86:95]
+names(belmontdiscoverAll) <- gsub("\\.", " ", names(belmontdiscoverAll))
+discoverAll <- apply(belmontdiscoverAll, 2, function(x) sum(!is.na(x)))
+discoverAll <- sort(discoverAll, decreasing=TRUE)
+par(las=2)
+mp <- barplot(discoverAll, axisnames=F, col=terrain.colors(10), beside=T)
+legend("topright", legend=names(discoverAll), cex=0.75, fill=terrain.colors(10)) 
+title("How do you normally discover data?")
+
+# Discovery table
+badDiscover <- is.na(belmont[, 86]) & is.na(belmont[, 87]) & is.na(belmont[, 88]) & is.na(belmont[, 89]) & is.na(belmont[, 90]) & is.na(belmont[, 91]) & is.na(belmont[, 92]) & is.na(belmont[, 93]) & is.na(belmont[, 94]) & is.na(belmont[, 95]) 
+table(badDiscover)
+nDiscover <- table(badDiscover)[1] # number of respondents that provided info
+tabDiscover <- data.frame(discoverAll)
+tabDiscover$Percentage <- round(discoverAll/nDiscover * 100, 1)
+rename(tabDiscover, c("discoverAll" = "Frequency"))
+#xtable(data.frame(tabDiscover), caption="Discovery routes")
+
+# other routes of discovery 
+baddisc <- is.na(belmont$Other.discovery)
+otherdisc <- belmont$Other.discovery[!baddisc]
+#write.csv(otherdisc, "/Users/bschmid1/Dropbox/Belmont Forum/data/otherdisc.csv", row.names = FALSE)
+#length(otherdisc)
+
+# ToDo: how many respondents provided no answer for discovery routes - not yet completed 
+#L = list()
+#for (i in 1:10){
+#    L[[i]] <- is.na(belmont[ , 85+i])
+#}
+#disctriv <- Reduce(intersect,  L) 
+badnodisc <- logical()
+namesdisc <- names(belmontdiscover)
+#for (n in names(belmontdiscover){
+#    badnodisc <- badnodisc & is.na(belmont$n)
+#}
+
+badnodisc <- is.na(belmont$References.in.journal.articles) & is.na(belmont$Newsletters.or.other.publications) & is.na(belmont$Government.or.institutional.announcements) & is.na(belmont$Searching.in.specific.data.repositories) & is.na(belmont$Web.search.engines) & is.na(belmont$Directories.or.catalogs) & is.na(belmont$Social.media) & is.na(belmont$Blogs) & is.na(belmont$Direct.requests.to.data.providers)
+nd <- sum(badnodisc)
+md <- dim(belmont)[1] - nd
+n <- dim(belmont)[1]
+```
+
+Of all respondents, `r md` individuals selected at least one of the nine options of discovery routes. For these, discovery of open data primarily takes place via references in journal articles (`r percent((n - sum(is.na(belmont$References.in.journal.articles)))/md)`), web search engines (`r percent((n - sum(is.na(belmont$Web.search.engines)))/md)`) and searching in specific data repositories (`r percent((n - sum(is.na(belmont$Searching.in.specific.data.repositories)))/md)`). In, addition `r percent((n - sum(is.na(belmont$Direct.requests.to.data.providers)))/md)` of all respondents use direct requests to data providers. Newsletters or other publications, government or institutional announcements and directories and catalogues play a less important role but are still recognized by about 1/4 to 1/5 of all respondents (`r percent((n - sum(is.na(belmont$Newsletters.or.other.publications)))/md)` to `r percent((n - sum(is.na(belmont$Directories.or.catalogs)))/md)`). Social media and blogs seem only used by less than 1/10 of all respondents (`r percent((n - sum(is.na(belmont$Blogs)))/md)` for blogs). 
+
+In addition, 33 respondents provided information about other discovery routes (in order of frequency):
+
+- personal contacts with colleagues and scientific communities
+- presentations at conferences and workshops
+- larger projects / programs
+- (open) data journals
+- mailing lists
+- data centres and data portals
+
+
+## Data archives used (by discipline)
+Data archives can be used for different purposes, for discovery of data and/ or for publishing data. In addition, respondents were asked to recommend leading examples inside or outside of their community.  
+
+Q15: What specific systems or archives do you currently use to find or access open data? Please name up to 3 of the most important ones you would recommend and why, adding a URL where possible.
+
+```{r, cache=F, echo=F}
+belmontrepdisc <- belmont[ , 96:98]
+# store freetext into file repdisc
+badfind <- is.na(belmontrepdisc)
+repdisc <- belmontrepdisc[!badfind]
+repdisc <- gsub("http://", "", repdisc)
+repdisc <- sort(repdisc) # sort alphabetically
+#write.csv(repdisc, "/Users/bschmid1/Dropbox/Belmont Forum/data/repdisc.csv", row.names = FALSE)
+``` 
+For finding or accessing data a wide variety of data repositories and data portals, but also general search engines, were mentioned, e.g. (roughly ordered based on an OpenRefine clustering and a word cloud):
+
+- NASA
+- Pangaea
+- National Center for Biotechnology Information (NCBI), e.g. Genbank
+- Google
+- Global Biodiversity Information Facility (GBIF)
+- Dryad
+- National Oceanic and Atmospheric Administration (NOOA), e.g. National Climatic Data Center
+- Google Scholar
+- DataONE
+- European Centre for Medium-Range Weather Forecasts (ECMWF)
+- U.S. Geological Survey (USGS)
+
+
+Q16: What specific systems or archives do you currently use to publish your data? Please name up to 3 of the most important ones you would recommend and why, adding a URL where possible.
+
+
+```{r, cache=F, echo=F}
+belmontreppub <- belmont[ , 99:101]
+# store freetext into file reppub
+badfind2 <- is.na(belmontreppub)
+reppub <- belmontreppub[!badfind2]
+reppub <- gsub("http://", "", reppub)
+reppub <- sort(reppub) # sort alphabetically
+#write.csv(reppub, "/Users/bschmid1/Dropbox/Belmont Forum/data/reppub.csv", row.names = FALSE)
+``` 
+
+For publishing data, the following data repositories were most popular (roughly ordered based on a word cloud): 
+
+- Pangaea
+- Dryad
+- NCBI, e.g. Genbank, European Nucleotide Archive (ENA)
+- NOOA, e.g. paleoclimatology data
+- GBIF
+- Figshare
+- GitHub
+- Carbon Dioxide Information Analysis Center (CDIAC)
+- British Atmospheric Data Centre (BADC)
+
+More generally, several respondents pointed out that they publish data via institutional or organisational data repositories and/or via journals. 
+
+Q17: Do you know of any other leading examples of open data systems either inside or outside of your community? Please name up to 3 of the most important ones you would recommend and why, adding a URL where possible.
+
+```{r, cache=F, echo=F}
+belmontleadex <- belmont[ , 102:104]
+# store freetext into file reppub
+badfind3 <- is.na(belmontleadex)
+leadex <- belmontleadex[!badfind3]
+leadex <- gsub("http://", "", leadex)
+leadex <- sort(leadex) # sort alphabetically
+#write.csv(leadex, "/Users/bschmid1/Dropbox/Belmont Forum/data/leadex.csv", row.names = FALSE)
+``` 
+
+Leading examples as suggested by the respondents include the following data repositories (roughly ordered based on a word cloud):
+
+- NASA
+- Dryad
+- NOAA
+- GBIF
+- Pangaea
+- Figshare
+- data.gov.au
+
+## Burden when accessing and reusing data
+Q18: What of the following do you consider a significant burden when accessing and reusing data for your work?
+
+```{r, cache=F, echo=F}
+belmontburden <- belmont[, 105:115]
+belmontburden <- lapply(belmontburden, factor, 
+              levels = c("No Burden", "Some Burden", "Significant Burden"))
+belmontburden <- as.data.frame(belmontburden)
+names(belmontburden) <- gsub("\\.", " ", names(belmontburden))
+belmontburdenlik <- likert(belmontburden)
+plot(belmontburdenlik, centered = FALSE, wrap = 30) + ggtitle("What do you consider a burden when accessing and reusing data?") +  theme(plot.title = element_text(size = 10,colour="black")) + ylab("Percentage") + theme(axis.title.y = element_text(size = 8, colour = 'black'))
+```
+
+Paying for access is considered the most significant burden when accessing and reusing data. It can not be assessed how frequently paying is actually the case as this question was not provided in the survey. Further, about half of all respondents consider the varying degrees of data quality in different dataset, varying standards in how the data has been gathered and varying data formats as an obstacle. At least every third considers as an issue to understand how to interpret and use, and to understand how to access the data. At the lower end is tof access usable citation and attribution information although still some burden for 70% of all respondents. Also the need to register before accessing the data does not seem to present a significant burden.  
+
+
+## Wishlist for open data (open answer)
+Q19: Are there specific types, sources, or topics of data (e.g. private-sector data, household microdata, or genetic data) relevant to your work where significant expansion in open data would have substantial benefits to your work or that of your community?
+
+```{r, cache=F, echo=F}
+bad2 <- is.na(belmont$Open.Ended.Response)
+wishlist <- belmont$Open.Ended.Response[!bad2]
+#write.csv(wishlist, "/Users/bschmid1/Dropbox/Belmont Forum/data/wishlist.csv", row.names = FALSE)
+#length(wishlist)
+``` 
+
+Several desires regarding access to data have been expressed:
+
+- climate data from specific countries, e.g. China, India, Russia, Asia, South America, France, developing countries
+- support of long-tail research datasets via repositories (incl. institutional)
+- private-sector data
+- lack of community standards in some fields, e.g. oceanography
+- data from smaller citizen science projects, some do not share because they are principal investigator-driven or they don't have the technology 
+- meterological and climate data: world-wide earthquake data, high-resolution satellite data, traffic activity data (ships, cars, planes, trains), raw historical world meterological data, air quality monitoring data, climate model data, etc.
+- economical data: food trade and production data, insurance sector data, census and household microdata, building energy consumption data, water consumption data, insurance sector data, etc. 
+- genetic ressources, morphological datasets, population genetic data matrices
+- biogeographic data, habitat maps, small data sets about biodiversity that have not been digitized
+- more could be done for the expansion of access to freely available older references, esp. for in-copyright publications, e.g. via OCR
+- enforcing open data as a standard by all publishers
+- source code of simulation programs
+- project data that are not made available after projects are finished
+- a data search engine that is as easy to use as Google for general search purposes
+- To address all the attributes that data users would like to see is impossible with current funding and resources. Efforts must not be at the expense of existing programs that are already underfunded. New and substantial resources are needed to make this happen.
+
+## Views on barriers to publish data by discipline: Earth sciences vs. chemical sciences etc.
+The desire to keep control of their data seems to be much more prevalent for some disciplinary areas: the desire to publish results before releasing data is seen as a major barrier for over 4/5 respondents (85%) from chemical sciences while only about the half of respondents from the earth sciences (54%). Even more significant, concerns about misinterpretation or misuse rank second for the chemical sciences while only fourth for the earth sciences. The social sciences seem to be more concerned about legal and organisational constraints, and have some concerns about the impact of data release, e.g. on endangered species, cultural artifacts or vulnerable populations, unwanted disclosure, etc. 
+
+```{r, cache=F, echo=F, message=FALSE}
+belmontEarth <- belmont[!is.na(belmont$Earth.sciences.and.environmental.sciences), ]
+belmontChem <- belmont[!is.na(belmont$Chemical.sciences), ]
+belmontSoc <- belmont[!is.na(belmont$Social.sciences), ]
+belmontBio <- belmont[!is.na(belmont$Biological.sciences), ]
+belmontComp <- belmont[!is.na(belmont$Computer.sciences), ]
+belmontClim <- belmont[!is.na(belmont$Climate.and.atmospheric.sciences), ]
+belmontEng <- belmont[!is.na(belmont$Engineering), ]
+
+par(mfrow=c(2,1))
+
+belmontbarrEarth <- belmontEarth[, 75:84]
+belmontbarrEarth <- lapply(belmontbarrEarth, factor, levels=c("Minor Barrier", "Barrier", "Major Barrier"))
+belmontbarrEarth <- as.data.frame(belmontbarrEarth)
+names(belmontbarrEarth) <- gsub("\\.", " ", names(belmontbarrEarth))
+belmontbarrEarthlik <- likert(belmontbarrEarth)
+plot(belmontbarrEarthlik, centered = FALSE, wrap = 30) + ggtitle("Barriers to publish data as open data (earth sciences)") +  theme(plot.title = element_text(size = 10,colour="black")) + ylab("Percentage") + theme(axis.title.y = element_text(size = 8, colour = 'black'))
+
+belmontbarrChem <- belmontChem[, 75:84]
+belmontbarrChem <- lapply(belmontbarrChem, factor, levels=c("Minor Barrier", "Barrier", "Major Barrier"))
+belmontbarrChem <- as.data.frame(belmontbarrChem)
+names(belmontbarrChem) <- gsub("\\.", " ", names(belmontbarrChem))
+belmontbarrChemlik <- likert(belmontbarrChem)
+plot(belmontbarrChemlik, centered = FALSE, wrap = 30) + ggtitle("Barriers to publish data as open data (chemical sciences)") +  theme(plot.title = element_text(size = 10,colour="black")) + ylab("Percentage") + theme(axis.title.y = element_text(size = 8, colour = 'black'))
+
+belmontbarrSoc <- belmontSoc[, 75:84]
+belmontbarrSoc <- lapply(belmontbarrSoc, factor, levels=c("Minor Barrier", "Barrier", "Major Barrier"))
+belmontbarrSoc <- as.data.frame(belmontbarrSoc)
+names(belmontbarrSoc) <- gsub("\\.", " ", names(belmontbarrSoc))
+belmontbarrSoclik <- likert(belmontbarrSoc)
+plot(belmontbarrSoclik, centered = FALSE, wrap = 30) + ggtitle("Barriers to publish data as open data (social sciences)") +  theme(plot.title = element_text(size = 10,colour="black")) + ylab("Percentage") + theme(axis.title.y = element_text(size = 8, colour = 'black'))
+
+belmontbarrBio <- belmontBio[, 75:84]
+belmontbarrBio <- lapply(belmontbarrBio, factor, levels=c("Minor Barrier", "Barrier", "Major Barrier"))
+belmontbarrBio <- as.data.frame(belmontbarrBio)
+names(belmontbarrBio) <- gsub("\\.", " ", names(belmontbarrBio))
+belmontbarrBiolik <- likert(belmontbarrBio)
+plot(belmontbarrBiolik, centered = FALSE, wrap = 30) + ggtitle("Barriers to publish data as open data (biological sciences)") +  theme(plot.title = element_text(size = 10,colour="black")) + ylab("Percentage") + theme(axis.title.y = element_text(size = 8, colour = 'black'))
+
+belmontbarrComp<- belmontComp[, 75:84]
+belmontbarrComp<- lapply(belmontbarrComp, factor, levels=c("Minor Barrier", "Barrier", "Major Barrier"))
+belmontbarrComp<- as.data.frame(belmontbarrComp)
+
+belmontbarrClim <- belmontClim[, 75:84]
+belmontbarrClim <- lapply(belmontbarrClim, factor, levels=c("Minor Barrier", "Barrier", "Major Barrier"))
+belmontbarrClim <- as.data.frame(belmontbarrClim)
+
+belmontbarrEng <- belmontEng[, 75:84]
+belmontbarrEng <- lapply(belmontbarrEng, factor, levels=c("Minor Barrier", "Barrier", "Major Barrier"))
+belmontbarrEng <- as.data.frame(belmontbarrEng)
+```
+
+
+## Disciplines - Testing selected views on barriers / motivators (MANOVA/ANOVA, MWW)
+```{r, cache=F, echo=F, message=FALSE}
+# barriers
+#[1] "Physical.sciences"                         "Chemical.sciences"                        
+#[3] "Earth.sciences.and.environmental.sciences" "Biological.sciences"                      
+#[5] "Agricultural.and.veterinary.sciences"      "Social.sciences"                          
+#[7] "Computer.sciences"                         "Climate.and.atmospheric.sciences"         
+#[9] "Health.sciences"                           "Engineering"                              
+#[11] "Economics"                                 "Other.discipline"    
+
+badDisc <- is.na(belmont[, 13]) & is.na(belmont[, 14]) & is.na(belmont[, 15]) & is.na(belmont[, 16]) & is.na(belmont[, 17]) & is.na(belmont[, 18]) & is.na(belmont[, 19]) & is.na(belmont[, 20]) & is.na(belmont[, 21]) & is.na(belmont[, 22]) & is.na(belmont[, 23]) 
+belmont_test2 <- belmont_test[!badDisc, ]
+
+## Physical sciences
+belmont_test2$Phys <- ifelse(is.na(belmont_test2$Physical.sciences), "Other", "Physics")
+# motivators
+fitphysmot <- manova(cbind(Requests.from.data.users, Community.norms, Organizational.institutional.policy, Publisher.policy, Funder.policy, Scientific.professional.society.policy,Dissemination.and.recognition.of.your.work.research, Acceleration.of.scientific.research.and.applications, Personal.commitment.to.open.data) ~ Phys, data=belmont_test2) 
+summary(fitphysmot)
+#           Df   Pillai approx F num Df den Df Pr(>F)
+#Phys        1 0.015567   1.3547      9    771 0.2049
+#Residuals 779 
+
+# barriers 
+belmont_test2$Phys <- ifelse(is.na(belmont_test2$Physical.sciences), "Other", "Physics")
+fitphys <- manova(cbind(Legal.constraints, Organisational.constraints, Commercial.use.and.exploitation,  Loss.of.control.over.intellectual.property, Misinterpretation.or.misuse,                              Loss.of.credit.or.recognition, Difficulty.of.clarifying.rights.multiple.inputs.or.authors, Concerns.about.legal.liability.or.release, Concerns.about.impact.of.data.release,                 Desire.to.publish.results.before.releasing.data) ~ Phys, data=belmont_test2) 
+
+# 162 responses in Phys
+
+summary(fitphys)
+#           Df   Pillai approx F num Df den Df  Pr(>F)  
+#Phys        1 0.026929   2.0839     10    753 0.02356 *
+#Residuals 762                                          
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+summary.aov(fitphys)
+# Response Concerns.about.legal.liability.or.release :
+#             Df Sum Sq Mean Sq F value Pr(>F)  
+#Phys          1   3.10 3.10161  5.8963 0.0154 *
+#Residuals   762 400.84 0.52603
+#468 observations deleted due to missingness
+### all other not statistically significant
+
+#physa1 <- aov(as.numeric(Concerns.about.legal.liability.or.release) ~ Phys, data=belmont_test2)
+#HSD.test(physa1, 'Phys', group=T)$groups
+#      trt    means M
+#1 Other   1.896936 a
+#2 Physics 1.704762 b
+
+# less (!!) concerned about legal liability of data or release of data
+
+## Chemical sciences 
+belmont_test2$Chem <- ifelse(is.na(belmont_test2$Chemical.sciences), "Other", "Chem")
+### motivators
+fitchemmot <- manova(cbind(Requests.from.data.users, Community.norms, Organizational.institutional.policy, Publisher.policy, Funder.policy, Scientific.professional.society.policy,Dissemination.and.recognition.of.your.work.research, Acceleration.of.scientific.research.and.applications, Personal.commitment.to.open.data) ~ Chem, data=belmont_test2)
+summary(fitchemmot)
+#           Df   Pillai approx F num Df den Df Pr(>F)
+#Chem        1 0.011244  0.97423      9    771 0.4599
+#Residuals 779  
+
+### barriers
+fitchem <- manova(cbind(Legal.constraints, Organisational.constraints, Commercial.use.and.exploitation,  Loss.of.control.over.intellectual.property, Misinterpretation.or.misuse,                              Loss.of.credit.or.recognition, Difficulty.of.clarifying.rights.multiple.inputs.or.authors, Concerns.about.legal.liability.or.release, Concerns.about.impact.of.data.release,                 Desire.to.publish.results.before.releasing.data) ~ Chem, data=belmont_test2) 
+# 50 responses in Chem
+
+summary(fitchem)
+#           Df   Pillai approx F num Df den Df Pr(>F)  
+#Chem        1 0.027785    2.152     10    753 0.0189 *
+#Residuals 762                                         
+#---
+# Response Misinterpretation.or.misuse :
+#             Df Sum Sq Mean Sq F value   Pr(>F)   
+#Chem          1   6.54  6.5429  10.692 0.001124 **
+#Residuals   762 466.29  0.6119       
+
+# Response Desire.to.publish.results.before.releasing.data :
+#             Df Sum Sq Mean Sq F value   Pr(>F)   
+#Chem          1   4.12  4.1245  8.0316 0.004719 **
+#Residuals   762 391.32  0.5135  
+#468 observations deleted due to missingness
+
+chema1 <- aov(as.numeric(Misinterpretation.or.misuse) ~ Chem, data=belmont_test2)
+HSD.test(chema1, 'Chem', group=T)$groups
+#    trt    means M
+#1 Chem  2.600000 a
+#2 Other 2.090347 b
+# chemicals sciences stronger concerned 
+
+chema2 <- aov(as.numeric(Desire.to.publish.results.before.releasing.data) ~ Chem, data=belmont_test2)
+HSD.test(chema2, 'Chem', group=T)$groups
+#    trt    means M
+#1 Chem  2.814815 a
+#2 Other 2.386189 b
+# chemicals sciences stronger concerned 
+
+belmont_test2$Earth <- ifelse(is.na(belmont_test2$Earth.sciences.and.environmental.sciences), "Other", "Earth")
+
+### motivators 
+fitearthmot <- manova(cbind(Requests.from.data.users, Community.norms, Organizational.institutional.policy, Publisher.policy, Funder.policy, Scientific.professional.society.policy,Dissemination.and.recognition.of.your.work.research, Acceleration.of.scientific.research.and.applications, Personal.commitment.to.open.data) ~ Earth, data=belmont_test2) 
+summary(fitearthmot)
+#           Df   Pillai approx F num Df den Df Pr(>F)
+#Earth       1 0.015323   1.3331      9    771 0.2156
+#Residuals 779 
+
+### barriers
+fitearth <- manova(cbind(Legal.constraints, Organisational.constraints, Commercial.use.and.exploitation,  Loss.of.control.over.intellectual.property, Misinterpretation.or.misuse,                              Loss.of.credit.or.recognition, Difficulty.of.clarifying.rights.multiple.inputs.or.authors, Concerns.about.legal.liability.or.release, Concerns.about.impact.of.data.release,                 Desire.to.publish.results.before.releasing.data) ~ Earth, data=belmont_test2) 
+# 846 responses in Earth
+
+summary(fitearth)
+#           Df    Pillai approx F num Df den Df Pr(>F)
+#Earth       1 0.0061422  0.46537     10    753 0.9125
+#Residuals 762     
+# ie no significant differences with the average for all disciplines across the survey
+
+
+belmont_test2$Bio <- ifelse(is.na(belmont_test2$Biological.sciences), "Other", "Bio")
+### motivators
+fitbiomot <- manova(cbind(Requests.from.data.users, Community.norms, Organizational.institutional.policy, Publisher.policy, Funder.policy, Scientific.professional.society.policy,Dissemination.and.recognition.of.your.work.research, Acceleration.of.scientific.research.and.applications, Personal.commitment.to.open.data) ~ Bio, data=belmont_test2)
+summary(fitbiomot)
+#           Df   Pillai approx F num Df den Df    Pr(>F)    
+#Bio         1 0.043191    3.867      9    771 8.258e-05 ***
+#Residuals 779                                              
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Requests.from.data.users :
+#             Df Sum Sq Mean Sq F value  Pr(>F)  
+##Bio           1   2.03 2.02993  5.3682 0.02077 *
+#Residuals   779 294.57 0.37814                  
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Publisher.policy :
+#             Df Sum Sq Mean Sq F value    Pr(>F)    
+#Bio           1   8.13  8.1338  16.483 5.405e-05 ***
+#Residuals   779 384.41  0.4935                      
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Tukey
+biomota1 <- aov(as.numeric(Requests.from.data.users) ~ Bio, data=belmont_test2)
+HSD.test(biomota1, 'Bio', group=T)$groups
+#    trt    means M
+#1 Other 2.561271 a
+#2 Bio   2.418994 b
+# requests from data users is a less strong motivator for the biological sciences
+
+biomota2 <- aov(as.numeric(Publisher.policy) ~ Bio, data=belmont_test2)
+HSD.test(biomota2, 'Bio', group=T)$groups
+#   trt    means M
+#1 Bio   2.279330 a
+#2 Other 2.027692 b
+# publisher policy is a stronger motivator for the biological sciences 
+
+### barriers 
+fitbio <- manova(cbind(Legal.constraints, Organisational.constraints, Commercial.use.and.exploitation,  Loss.of.control.over.intellectual.property, Misinterpretation.or.misuse,                              Loss.of.credit.or.recognition, Difficulty.of.clarifying.rights.multiple.inputs.or.authors, Concerns.about.legal.liability.or.release, Concerns.about.impact.of.data.release,                 Desire.to.publish.results.before.releasing.data) ~ Bio, data=belmont_test2)
+# 258 responses from Bio
+
+summary(fitbio)
+#           Df   Pillai approx F num Df den Df    Pr(>F)    
+#Bio         1 0.056585   4.5164     10    753 3.168e-06 ***
+#Residuals 762                                              
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+summary.aov(fitbio)
+# Response Organisational.constraints :
+#             Df Sum Sq Mean Sq F value   Pr(>F)   
+#Bio           1   4.14  4.1391  7.5139 0.006266 **
+#Residuals   762 419.76  0.5509                    
+#---
+
+# Response Concerns.about.impact.of.data.release :
+#             Df Sum Sq Mean Sq F value    Pr(>F)    
+#Bio           1  10.13 10.1287  17.938 2.561e-05 ***
+#Residuals   762 430.26  0.5646                      
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Desire.to.publish.results.before.releasing.data :
+#             Df Sum Sq Mean Sq F value  Pr(>F)   
+#Bio           1   3.75   3.747  7.2894 0.00709 **
+#Residuals   762 391.69   0.514                   
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+#468 observations deleted due to missingness
+
+# Agricultural and veterinary sciences 
+belmont_test2$Agr <- ifelse(is.na(belmont_test2$Agricultural.and.veterinary.sciences), "Other", "Agr")
+
+### motivators 
+fitagrmot <- manova(cbind(Requests.from.data.users, Community.norms, Organizational.institutional.policy, Publisher.policy, Funder.policy, Scientific.professional.society.policy,Dissemination.and.recognition.of.your.work.research, Acceleration.of.scientific.research.and.applications, Personal.commitment.to.open.data) ~ Agr, data=belmont_test2)
+summary(fitagrmot)
+#           Df   Pillai approx F num Df den Df Pr(>F)
+#Agr         1 0.010143  0.87779      9    771 0.5447
+#Residuals 779  
+
+### barriers
+fitagr <- manova(cbind(Legal.constraints, Organisational.constraints, Commercial.use.and.exploitation,  Loss.of.control.over.intellectual.property, Misinterpretation.or.misuse,                              Loss.of.credit.or.recognition, Difficulty.of.clarifying.rights.multiple.inputs.or.authors, Concerns.about.legal.liability.or.release, Concerns.about.impact.of.data.release,                 Desire.to.publish.results.before.releasing.data) ~ Agr, data=belmont_test2)
+# 53 responses from Agr
+
+summary(fitagr)
+#           Df  Pillai approx F num Df den Df Pr(>F)
+#Agr         1 0.02014   1.5477     10    753 0.1181
+#Residuals 762  
+
+# Social sciences
+belmont_test2$Soc <- ifelse(is.na(belmont_test2$Social.sciences), "Other", "Soc")
+
+### motivators
+fitsocmot <- manova(cbind(Requests.from.data.users, Community.norms, Organizational.institutional.policy, Publisher.policy, Funder.policy, Scientific.professional.society.policy,Dissemination.and.recognition.of.your.work.research, Acceleration.of.scientific.research.and.applications, Personal.commitment.to.open.data) ~ Soc, data=belmont_test2)
+summary(fitsocmot)
+#           Df   Pillai approx F num Df den Df Pr(>F)
+#Soc         1 0.012226   1.0603      9    771 0.3901
+#Residuals 779    
+
+### barriers
+fitsoc <- manova(cbind(Legal.constraints, Organisational.constraints, Commercial.use.and.exploitation,  Loss.of.control.over.intellectual.property, Misinterpretation.or.misuse,                              Loss.of.credit.or.recognition, Difficulty.of.clarifying.rights.multiple.inputs.or.authors, Concerns.about.legal.liability.or.release, Concerns.about.impact.of.data.release,                 Desire.to.publish.results.before.releasing.data) ~ Soc, data=belmont_test2)
+summary(fitsoc)
+
+# 66 responses from Social Sciences
+
+#           Df   Pillai approx F num Df den Df Pr(>F)
+#Soc         1 0.013822   1.0554     10    753 0.3948
+#Residuals 762  
+
+# Computer sciences
+belmont_test2$Comp <- ifelse(is.na(belmont_test2$Computer.sciences), "Other", "Comp")
+### motivators
+fitcompmot <- manova(cbind(Requests.from.data.users, Community.norms, Organizational.institutional.policy, Publisher.policy, Funder.policy, Scientific.professional.society.policy,Dissemination.and.recognition.of.your.work.research, Acceleration.of.scientific.research.and.applications, Personal.commitment.to.open.data) ~ Comp, data=belmont_test2)
+summary(fitcompmot)
+#           Df   Pillai approx F num Df den Df Pr(>F)
+#Comp        1 0.012814    1.112      9    771 0.3514
+#Residuals 779   
+
+### barriers
+fitcomp <- manova(cbind(Legal.constraints, Organisational.constraints, Commercial.use.and.exploitation,  Loss.of.control.over.intellectual.property, Misinterpretation.or.misuse,                              Loss.of.credit.or.recognition, Difficulty.of.clarifying.rights.multiple.inputs.or.authors, Concerns.about.legal.liability.or.release, Concerns.about.impact.of.data.release,                 Desire.to.publish.results.before.releasing.data) ~ Comp, data=belmont_test2)
+summary(fitcomp)
+
+# 85 responses from Computer Sciences
+
+#           Df   Pillai approx F num Df den Df   Pr(>F)   
+#Comp        1 0.032774   2.5515     10    753 0.004935 **
+#Residuals 762                                            
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+summary.aov(fitcomp)
+# Response Legal.constraints :
+#             Df Sum Sq Mean Sq F value  Pr(>F)  
+#Comp          1   2.38 2.38211  4.1621 0.04168 *
+#Residuals   762 436.11 0.57233                  
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Concerns.about.legal.liability.or.release :
+#             Df Sum Sq Mean Sq F value  Pr(>F)  
+#Comp          1   2.28 2.27614  4.3181 0.03804 *
+#Residuals   762 401.66 0.52711                  
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Concerns.about.impact.of.data.release :
+#             Df Sum Sq Mean Sq F value    Pr(>F)    
+#Comp          1   7.38  7.3813  12.989 0.0003336 ***
+#Residuals   762 433.01  0.5682                      
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+#468 observations deleted due to missingness
+
+compbara1 <- aov(as.numeric(Legal.constraints) ~ Comp, data=belmont_test2)
+HSD.test(compbara1, 'Comp', group=T)$groups
+#    trt    means M
+#1 Comp  2.448276 a
+#2 Other 2.260591 a
+# more concerned, not significant
+compbara2 <- aov(as.numeric(Concerns.about.legal.liability.or.release) ~ Comp, data=belmont_test2)
+HSD.test(compbara2, 'Comp', group=T)$groups
+#    trt    means M
+#1 Comp  2.052632 a
+#2 Other 1.859008 a
+# more concerned, but not significant
+compbara3 <- aov(as.numeric(Concerns.about.impact.of.data.release) ~ Comp, data=belmont_test2)
+HSD.test(compbara3, 'Comp', group=T)$groups
+#    trt    means M
+#1 Comp  2.175439 a
+#2 Other 1.825000 b
+# more concerned, significant
+
+# Climate and atmospheric sciences 
+belmont_test2$Clim <- ifelse(is.na(belmont_test2$Climate.and.atmospheric.sciences), "Other", "Clim")
+### motivators
+fitclimmot <- manova(cbind(Requests.from.data.users, Community.norms, Organizational.institutional.policy, Publisher.policy, Funder.policy, Scientific.professional.society.policy,Dissemination.and.recognition.of.your.work.research, Acceleration.of.scientific.research.and.applications, Personal.commitment.to.open.data) ~ Clim, data=belmont_test2)
+summary(fitclimmot)
+#           Df    Pillai approx F num Df den Df Pr(>F)
+#Clim        1 0.0099302  0.85922      9    771 0.5616
+#Residuals 779  
+
+### barriers
+fitclim <- manova(cbind(Legal.constraints, Organisational.constraints, Commercial.use.and.exploitation,  Loss.of.control.over.intellectual.property, Misinterpretation.or.misuse,                              Loss.of.credit.or.recognition, Difficulty.of.clarifying.rights.multiple.inputs.or.authors, Concerns.about.legal.liability.or.release, Concerns.about.impact.of.data.release,                 Desire.to.publish.results.before.releasing.data) ~ Clim, data=belmont_test2)
+summary(fitclim)
+
+# 846 responses from climate sciences 
+
+#           Df  Pillai approx F num Df den Df    Pr(>F)    
+#Clim        1 0.04224    3.321     10    753 0.0003095 ***
+#Residuals 762                                             
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+summary.aov(fitclim)
+# Response Commercial.use.and.exploitation :
+#             Df Sum Sq Mean Sq F value Pr(>F)  
+#Clim          1   3.60  3.5982  5.8289  0.016 *
+#Residuals   762 470.38  0.6173                 
+
+# Response Misinterpretation.or.misuse :
+#             Df Sum Sq Mean Sq F value   Pr(>F)   
+#Clim          1   5.50  5.4954  8.9604 0.002848 **
+#Residuals   762 467.34  0.6133                    
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Concerns.about.legal.liability.or.release :
+#             Df Sum Sq Mean Sq F value Pr(>F)  
+#Clim          1   3.18  3.1833  6.0528 0.0141 *
+#Residuals   762 400.75  0.5259                 
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Concerns.about.impact.of.data.release :
+#             Df Sum Sq Mean Sq F value   Pr(>F)   
+#Clim          1   4.18  4.1771  7.2968 0.007061 **
+#Residuals   762 436.21  0.5725                    
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+#468 observations deleted due to missingness
+
+climbara1 <- aov(as.numeric(Commercial.use.and.exploitation) ~ Clim, data=belmont_test2)
+HSD.test(climbara1, 'Clim', group=T)$groups
+#    trt    means M
+#1 Other 2.055957 a
+#2 Clim  1.942652 b
+# climate sciences researcher are less concerned
+
+climbara2 <- aov(as.numeric(Commercial.use.and.exploitation) ~ Clim, data=belmont_test2)
+HSD.test(climbara2, 'Clim', group=T)$groups
+#    trt    means M
+#1 Other 2.055957 a
+#2 Clim  1.942652 b
+# less concerned
+
+climbara3 <- aov(as.numeric(Concerns.about.legal.liability.or.release) ~ Clim, data=belmont_test2)
+HSD.test(climbara3, 'Clim', group=T)$groups
+#    trt    means M
+#1 Other 1.917733 a
+#2 Clim  1.782609 b
+# less concerned
+
+climbara4 <- aov(as.numeric(Concerns.about.impact.of.data.release) ~ Clim, data=belmont_test2)
+HSD.test(climbara4, 'Clim', group=T)$groups
+#    trt    means M
+#1 Other 1.901099 a
+#2 Clim  1.745387 b
+# less concerned
+
+# Heath sciences
+belmont_test2$Heal <- ifelse(is.na(belmont_test2$Health.sciences), "Other", "Heal")
+
+### motivators 
+fithealmot <- manova(cbind(Requests.from.data.users, Community.norms, Organizational.institutional.policy, Publisher.policy, Funder.policy, Scientific.professional.society.policy,Dissemination.and.recognition.of.your.work.research, Acceleration.of.scientific.research.and.applications, Personal.commitment.to.open.data) ~ Heal, data=belmont_test2)
+summary(fithealmot)
+#           Df    Pillai approx F num Df den Df Pr(>F)
+#Heal        1 0.0080314  0.69359      9    771 0.7151
+#Residuals 779    
+
+### barriers
+fitheal <- manova(cbind(Legal.constraints, Organisational.constraints, Commercial.use.and.exploitation,  Loss.of.control.over.intellectual.property, Misinterpretation.or.misuse,                              Loss.of.credit.or.recognition, Difficulty.of.clarifying.rights.multiple.inputs.or.authors, Concerns.about.legal.liability.or.release, Concerns.about.impact.of.data.release,                 Desire.to.publish.results.before.releasing.data) ~ Heal, data=belmont_test2)
+summary(fitheal)
+
+# 22 responses from health sciences
+
+#           Df   Pillai approx F num Df den Df Pr(>F)
+#Heal        1 0.011999  0.91449     10    753 0.5191
+#Residuals 762   
+## no significant diffences
+
+# Engineering
+belmont_test2$Eng <- ifelse(is.na(belmont_test2$Engineering), "Other", "Eng")
+### motivators
+fitengmot <- manova(cbind(Requests.from.data.users, Community.norms, Organizational.institutional.policy, Publisher.policy, Funder.policy, Scientific.professional.society.policy,Dissemination.and.recognition.of.your.work.research, Acceleration.of.scientific.research.and.applications, Personal.commitment.to.open.data) ~ Eng, data=belmont_test2)
+summary(fitengmot)
+#           Df   Pillai approx F num Df den Df Pr(>F)
+#Eng         1 0.007891  0.68137      9    771 0.7263
+#Residuals 779    
+
+### barriers
+fiteng <- manova(cbind(Legal.constraints, Organisational.constraints, Commercial.use.and.exploitation,  Loss.of.control.over.intellectual.property, Misinterpretation.or.misuse,                              Loss.of.credit.or.recognition, Difficulty.of.clarifying.rights.multiple.inputs.or.authors, Concerns.about.legal.liability.or.release, Concerns.about.impact.of.data.release,                 Desire.to.publish.results.before.releasing.data) ~ Eng, data=belmont_test2)
+summary(fiteng)
+
+# 88 responses from Engineering 
+#
+#           Df   Pillai approx F num Df den Df  Pr(>F)   
+#Eng         1 0.030456   2.3654     10    753 0.00932 **
+#Residuals 762                                           
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#
+# Response Organisational.constraints :
+#             Df Sum Sq Mean Sq F value  Pr(>F)  
+#Eng           1   3.53  3.5268  6.3931 0.01166 *
+#Residuals   762 420.37  0.5517                  
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#
+## Response Commercial.use.and.exploitation :
+#             Df Sum Sq Mean Sq F value  Pr(>F)  
+#Eng           1   2.82 2.82442  4.5679 0.03289 *
+#Residuals   762 471.15 0.61831                  
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#
+# Response Concerns.about.legal.liability.or.release :
+#             Df Sum Sq Mean Sq F value   Pr(>F)   
+#Eng           1   3.81  3.8089  7.2537 0.007231 **
+#Residuals   762 400.13  0.5251                    
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+# Response Concerns.about.impact.of.data.release :
+#             Df Sum Sq Mean Sq F value   Pr(>F)   
+#Eng           1   5.27  5.2699   9.229 0.002464 **
+#Residuals   762 435.12  0.5710                    
+#---
+#Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1    
+
+#engbara1 <- aov(as.numeric(Organisational.constraints) ~ Eng, data=belmont_test2)
+#HSD.test(engbara1, 'Eng', group=T)$groups
+#    trt    means M
+#1 Eng   2.344262 a
+#2 Other 2.060724 b
+#TukeyHSD(engbara1, 'Eng', conf.level=0.95)
+#                diff      lwr         upr    p adj
+#Other-Eng -0.2835388 -0.47665 -0.09042754 0.004054
+# Eng more concerned
+
+#engbara2 <- aov(as.numeric(Concerns.about.legal.liability.or.release) ~ Eng, data=belmont_test2)
+#HSD.test(engbara2, 'Eng', group=T)$groups
+#TukeyHSD(engbara2, 'Eng', conf.level=0.95)
+#                diff        lwr         upr     p adj
+#Other-Eng -0.2459016 -0.4506744 -0.04112883 0.0186515
+# Eng more concerned
+
+#engbara3 <- aov(as.numeric(Concerns.about.legal.liability.or.release) ~ Eng, data=belmont_test2)
+#HSD.test(engbara3, 'Eng', group=T)$groups
+#    trt    means M
+#1 Eng   2.114754 a
+#2 Other 1.853018 b
+# Eng more concerned
+
+#engbara4 <- aov(as.numeric(Concerns.about.impact.of.data.release) ~ Eng, data=belmont_test2)
+#HSD.test(engbara4, 'Eng', group=T)$groups
+#    trt    means M
+#1 Eng   2.145161 a
+#2 Other 1.825166 b
+    
+# Economics 
+#belmont_test2$Econ <- ifelse(is.na(belmont_test2$Economics), "Other", "Econ")
+
+### motivators
+#fiteconmot <- manova(cbind(Requests.from.data.users, Community.norms, Organizational.institutional.policy, Publisher.policy, Funder.policy, Scientific.professional.society.policy,Dissemination.and.recognition.of.your.work.research, Acceleration.of.scientific.research.and.applications, Personal.commitment.to.open.data) ~ Econ, data=belmont_test2)
+#summary(fiteconmot)
+#           Df   Pillai approx F num Df den Df Pr(>F)
+#Econ        1 0.017618   1.5363      9    771 0.1309
+#Residuals 779   
+
+### barriers
+#fitecon <- manova(cbind(Legal.constraints, Organisational.constraints, Commercial.use.and.exploitation,  Loss.of.control.over.intellectual.property, Misinterpretation.or.misuse,                              Loss.of.credit.or.recognition, Difficulty.of.clarifying.rights.multiple.inputs.or.authors, Concerns.about.legal.liability.or.release, Concerns.about.impact.of.data.release,                 Desire.to.publish.results.before.releasing.data) ~ Econ, data=belmont_test2)
+#summary(fitecon)
+
+# 21 respondents from Economics 
+
+#           Df   Pillai approx F num Df den Df Pr(>F)
+#Econ        1 0.020324   1.5622     10    753 0.1135
+#Residuals 762             
+
+#belmont_test2$OthD <- ifelse(is.na(belmont_test2$Other.discipline), "Other", "OthD")
+### motivators
+#fitothdmot <- manova(cbind(Requests.from.data.users, Community.norms, Organizational.institutional.policy, Publisher.policy, Funder.policy, Scientific.professional.society.policy,Dissemination.and.recognition.of.your.work.research, Acceleration.of.scientific.research.and.applications, Personal.commitment.to.open.data) ~ OthD, data=belmont_test2)
+#summary(fitothdmot)
+#           Df    Pillai approx F num Df den Df Pr(>F)
+#OthD        1 0.0048233   0.4152      9    771 0.9274
+#Residuals 779
+
+### barriers
+#fitothd <- manova(cbind(Legal.constraints, Organisational.constraints, Commercial.use.and.exploitation,  Loss.of.control.over.intellectual.property, Misinterpretation.or.misuse,                              Loss.of.credit.or.recognition, Difficulty.of.clarifying.rights.multiple.inputs.or.authors, Concerns.about.legal.liability.or.release, Concerns.about.impact.of.data.release,                 Desire.to.publish.results.before.releasing.data) ~ OthD, data=belmont_test2)
+#summary(fitothd)
+
+# 20 other discipline
+
+#           Df   Pillai approx F num Df den Df Pr(>F)
+#OthD        1 0.013635   1.0409     10    753 0.4067
+#Residuals 762    
+
+```
+
+## Views on barriers to publish data: Data user vs. data provider
+There does not seem to be a significant difference between the barriers to publish data as open data as perceived by data users in comparison to those perceived by data providers. 
+
+```{r, cache=F, echo=F, message=FALSE}
+belmontDU <- belmont[!is.na(belmont$Data.User), ]
+belmontDP <- belmont[!is.na(belmont$Data.Provider), ]
+belmontDM <- belmont[!is.na(belmont$Data.Manager), ]
+
+#par(mfrow=c(2,1))
+
+belmontbarrDU <- belmontDU[, 75:84]
+belmontbarrDU <- lapply(belmontbarrDU, factor, levels=c("Minor Barrier", "Barrier", "Major Barrier"))
+belmontbarrDU <- as.data.frame(belmontbarrDU)
+names(belmontbarrDU) <- gsub("\\.", " ", names(belmontbarrDU))
+belmontbarrDUlik <- likert(belmontbarrDU)
+plot(belmontbarrDUlik, centered = FALSE, wrap = 30) + ggtitle("Barriers to publish data as open data (data user)") +  theme(plot.title = element_text(size = 10,colour="black")) + ylab("Percentage") + theme(axis.title.y = element_text(size = 8, colour = 'black'))
+
+
+belmontbarrDP <- belmontDP[, 75:84]
+belmontbarrDP <- lapply(belmontbarrDP, factor, levels=c("Minor Barrier", "Barrier", "Major Barrier"))
+belmontbarrDP <- as.data.frame(belmontbarrDP)
+names(belmontbarrDP) <- gsub("\\.", " ", names(belmontbarrDP))
+belmontbarrDPlik <- likert(belmontbarrDP)
+plot(belmontbarrDPlik, centered = FALSE, wrap = 30) + ggtitle("Barriers to publish data as open data (data provider)") +  theme(plot.title = element_text(size = 10,colour="black")) + ylab("Percentage") + theme(axis.title.y = element_text(size = 8, colour = 'black'))
+```
+
+
+### Views on data publishing by age group
+```{r, cache=F, echo=F, message=FALSE}
+# plot figure directly and export as PDF of size 11x6 inches
+belmontPubl <- belmont[ , c("Age", "Desire.to.publish.results.before.releasing.data")]
+belmontPubl$Desire.to.publish.results.before.releasing.data <- factor(belmontPubl$Desire.to.publish.results.before.releasing.data, levels=c("Minor Barrier", "Barrier", "Major Barrier"))
+#names(belmontPubl) <- gsub("\\.", " ", names(belmontPubl))
+tb <- with(belmontPubl, table(Age, Desire.to.publish.results.before.releasing.data))
+mosaicplot(tb[1:10, ], ylab="", col=c("yellowgreen", "cornflowerblue", "indianred"), main="Desire to publish results before releasing data")
+```
+
+Due to the very small number of respondents in some categories the plot does not display all age groups (age <= 20 and > 70 are not shown).
+
+As expected, the desire to publish results before releasing data is most prevalent at early stages of the career, i.e. the age from early to mid 30s, and is perceived as a major barrier by 69% of all respondents. For the other age groups about 40 to 57% respondents see a major barrier (see table below). 
+
+```{r, cache=F, echo=F, message=FALSE}
+tbperc <- prop.table(tb, 1) # percentages by rows 
+#tbperc
+pander(tbperc)
+```
+
+```{r, cache=F, echo=F, message=FALSE}
+disc <- names(belmont[ , 13:23])
+df = data.frame(matrix(vector(), 0, 11, dimnames=list(c(), disc)), stringsAsFactors=F)
+#for(i in 1:11) {df[1, i] <- as.numeric(table(belmont[ , 13], belmont[ , 13+i-1]))}
+for(i in 1:11){for(j in 1:11) {df[i, j] <- as.numeric(table(belmont[ , 13+i-1], belmont[ , 13+j-1]))}}
+xtable(df)
+
+# percentage row-wise per discipline
+df_perc = data.frame(matrix(vector(), 0, 11, dimnames=list(c(), disc)), stringsAsFactors=F)
+for(i in 1:11){for(j in 1:11) {df_perc[i, j] <- round((df[i,j] / df[i,i])*100, 1)}}
+
+# correlation of disciplines
+belmont_disc <- belmont
+badDisc <- is.na(belmont[, 13]) & is.na(belmont[, 14]) & is.na(belmont[, 15]) & is.na(belmont[, 16]) & is.na(belmont[, 17]) & is.na(belmont[, 18]) & is.na(belmont[, 19]) & is.na(belmont[, 20]) & is.na(belmont[, 21]) & is.na(belmont[, 22]) & is.na(belmont[, 23]) 
+belmont_disc <- belmont_disc[!badDisc, ]
+
+for(j in 13:23){belmont_disc[ , j] <- ifelse(is.na(belmont_disc[ , j]), 0, 1)}
+cor(belmont_disc[, 13:23])
+
+# rename variables
+newnames <- c("Physical.sciences"="Phys", "Chemical.sciences"="Chem",                        
+ "Earth.sciences.and.environmental.sciences"="Earth", "Biological.sciences"="Bio",                 "Agricultural.and.veterinary.sciences"="Agr", "Social.sciences"="Soc",                         "Computer.sciences"="Comp", "Climate.and.atmospheric.sciences"="Clim", "Health.sciences"="Health", "Engineering"="Eng", "Economics"="Econ")
+belmont_disc <- rename(belmont_disc, newnames)
+
+```
+
+## Uptake of the survey over time (16 Sept to 12 Nov 2014)
+```{r, cache=F, echo=F, message=FALSE}
+plot(belmont$End.date)
+
+``` 
+
+
+## Limitations of the study
+- As the majority of responses to the survey was triggered by the dissemination of the survey through an Open Access publisher (Copernicus Publications, sent to all authors on 25 September 2014) the cohort of respondents is likely more familiar with the concept of "open data" than the general population (here: the Environmental Change community). 
+- Information about gender and career stages has not been collected.
+- Several categorical questions were non-exclusive (i.e. multiple choice), e.g. disciplinary area, type of data professional, etc. For these question we restricted comparisons to two-sample sets, e.g. one selected research area vs. all other research areas. 
+
+## References
+[1] Belmont Forum https://igfagcr.org/, e-Infrastructure Data Management Project, http://www.bfe-inf.org/
+
+[2] Jason Bryer, Likert, an R package analyzing and visualizing Likert items, <http://jason.bryer.org/likert/>
